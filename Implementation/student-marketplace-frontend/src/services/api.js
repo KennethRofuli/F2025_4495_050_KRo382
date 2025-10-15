@@ -152,6 +152,27 @@ export const authAPI = {
     const token = await tokenManager.getToken();
     return !!token;
   },
+
+  // Get current user ID from token
+  async getCurrentUserId() {
+    try {
+      const token = await tokenManager.getToken();
+      if (!token) return null;
+      
+      // Simple JWT decode (just for user ID, not for security validation)
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      
+      const decoded = JSON.parse(jsonPayload);
+      return decoded.id;
+    } catch (error) {
+      console.log('Error decoding token:', error);
+      return null;
+    }
+  },
 };
 
 // Listings API methods
@@ -252,6 +273,73 @@ export const listingsAPI = {
       return {
         success: false,
         error: error.response?.data?.error || 'Failed to fetch your listings',
+      };
+    }
+  },
+};
+
+// Favorites API methods
+export const favoritesAPI = {
+  // Add listing to favorites
+  async addFavorite(listingId) {
+    try {
+      const response = await api.post(`/favorites/add/${listingId}`);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to add to favorites',
+      };
+    }
+  },
+
+  // Remove listing from favorites
+  async removeFavorite(listingId) {
+    try {
+      const response = await api.delete(`/favorites/remove/${listingId}`);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to remove from favorites',
+      };
+    }
+  },
+
+  // Get user's favorites
+  async getFavorites() {
+    try {
+      const response = await api.get('/favorites');
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to fetch favorites',
+      };
+    }
+  },
+
+  // Check if listing is favorited
+  async checkFavorite(listingId) {
+    try {
+      const response = await api.get(`/favorites/check/${listingId}`);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to check favorite status',
       };
     }
   },

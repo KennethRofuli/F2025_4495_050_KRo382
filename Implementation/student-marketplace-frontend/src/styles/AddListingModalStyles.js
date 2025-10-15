@@ -108,12 +108,20 @@ export const addListingModalStyles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: spacing.lg,
   },
+  imageButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: spacing.md,
+    gap: spacing.md,
+  },
   changeImageButton: {
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.sm,
-    marginTop: spacing.md,
+    flex: 1,
+    alignItems: 'center',
   },
   changeImageButtonText: {
     color: colors.white,
@@ -125,7 +133,8 @@ export const addListingModalStyles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.sm,
-    marginTop: spacing.sm,
+    flex: 1,
+    alignItems: 'center',
   },
   removeImageButtonText: {
     color: colors.white,

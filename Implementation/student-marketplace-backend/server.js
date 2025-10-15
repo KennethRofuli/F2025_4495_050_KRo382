@@ -17,6 +17,7 @@ app.use(cors());
 // Routes
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/listings", require("./routes/listings"));
+app.use("/api/favorites", require("./routes/favorites"));
 
 const PORT = process.env.PORT || 5000;
 const httpServer = createServer(app);
@@ -27,13 +28,28 @@ const io = new Server(httpServer, {
 });
 
 (async () => {
-  const pubClient = createClient({ url: process.env.REDIS_URL });
-  const subClient = pubClient.duplicate();
+  try {
+    const pubClient = createClient({ url: process.env.REDIS_URL });
+    const subClient = pubClient.duplicate();
 
-  await pubClient.connect();
-  await subClient.connect();
+    // Add error handlers to prevent warnings
+    pubClient.on('error', (err) => {
+      console.log('Redis pubClient error:', err.message);
+    });
+    
+    subClient.on('error', (err) => {
+      console.log('Redis subClient error:', err.message);
+    });
 
-  io.adapter(createAdapter(pubClient, subClient));
+    await pubClient.connect();
+    await subClient.connect();
+
+    io.adapter(createAdapter(pubClient, subClient));
+    console.log('✅ Redis connected successfully');
+  } catch (error) {
+    console.log('⚠️ Redis connection failed, using memory adapter:', error.message);
+    // Socket.IO will use memory adapter by default
+  }
 
   io.on("connection", (socket) => {
     console.log("⚡ New client connected:", socket.id);

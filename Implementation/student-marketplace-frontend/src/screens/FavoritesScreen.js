@@ -11,40 +11,48 @@ import {
   TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { listingsAPI, authAPI } from '../services/api';
-import { dashboardStyles } from '../styles/DashboardStyles';
-import EditListingModal from '../components/EditListingModal';
+import { favoritesAPI, authAPI } from '../services/api';
 import AddListingModal from '../components/AddListingModal';
-import ListingOptionsModal from '../components/ListingOptionsModal';
 import HeartIcon from '../components/HeartIcon';
+import ListingOptionsModal from '../components/ListingOptionsModal';
+import { dashboardStyles } from '../styles/DashboardStyles';
 
-const MyListingsScreen = ({ navigation }) => {
-  const [myListings, setMyListings] = useState([]);
-  const [filteredListings, setFilteredListings] = useState([]);
+const FavoritesScreen = ({ navigation }) => {
+  const [favorites, setFavorites] = useState([]);
+  const [filteredFavorites, setFilteredFavorites] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [selectedListing, setSelectedListing] = useState(null);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isOptionsModalVisible, setIsOptionsModalVisible] = useState(false);
+  const [selectedListing, setSelectedListing] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   useEffect(() => {
-    loadMyListings();
+    loadFavorites();
+    getCurrentUser();
   }, []);
 
-  const loadMyListings = async () => {
+  const getCurrentUser = async () => {
+    const userId = await authAPI.getCurrentUserId();
+    setCurrentUserId(userId);
+  };
+
+  const loadFavorites = async () => {
     try {
-      const result = await listingsAPI.getMyListings();
+      const result = await favoritesAPI.getFavorites();
       if (result.success) {
-        setMyListings(result.data);
-        setFilteredListings(result.data);
+        // Make sure we're accessing the correct data structure
+        const favoritesData = result.data.data || [];
+        setFavorites(favoritesData);
+        setFilteredFavorites(favoritesData);
       } else {
         Alert.alert('Error', result.error);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to load your listings');
+      Alert.alert('Error', 'Failed to load favorites');
+      console.error('Load favorites error:', error);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -53,7 +61,7 @@ const MyListingsScreen = ({ navigation }) => {
 
   const onRefresh = () => {
     setIsRefreshing(true);
-    loadMyListings();
+    loadFavorites();
   };
 
   const handleLogout = async () => {
@@ -85,83 +93,52 @@ const MyListingsScreen = ({ navigation }) => {
     setIsMenuVisible(!isMenuVisible);
   };
 
+  const handleMyListings = () => {
+    setIsMenuVisible(false);
+    navigation.navigate('MyListings');
+  };
+
   const handleDashboard = () => {
     setIsMenuVisible(false);
     navigation.navigate('Dashboard');
-  };
-
-  const handleFavorites = () => {
-    setIsMenuVisible(false);
-    navigation.navigate('Favorites');
   };
 
   const handleSearch = (query) => {
     setSearchQuery(query);
     
     if (!query.trim()) {
-      setFilteredListings(myListings);
+      setFilteredFavorites(favorites);
       return;
     }
 
-    const filtered = myListings.filter(listing =>
+    const filtered = favorites.filter(listing =>
       listing.title.toLowerCase().includes(query.toLowerCase()) ||
       listing.description.toLowerCase().includes(query.toLowerCase()) ||
       listing.category.toLowerCase().includes(query.toLowerCase())
     );
-    setFilteredListings(filtered);
+    setFilteredFavorites(filtered);
   };
 
-  const handleDeleteListing = (listingId, title) => {
-    Alert.alert(
-      'Delete Listing',
-      `Are you sure you want to delete "${title}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => deleteListing(listingId),
-        },
-      ]
-    );
+  const handleListingAdded = (newListing) => {
+    // No need to add to favorites automatically, user can heart it
+    setIsAddModalVisible(false);
   };
 
-  const deleteListing = async (listingId) => {
+  const handleRemoveFromFavorites = async (listingId) => {
     try {
-      const result = await listingsAPI.deleteListing(listingId);
+      const result = await favoritesAPI.removeFavorite(listingId);
       if (result.success) {
-        const updatedListings = myListings.filter(listing => listing._id !== listingId);
-        setMyListings(updatedListings);
-        setFilteredListings(updatedListings);
-        Alert.alert('Success', 'Listing deleted successfully');
+        // Remove from local state
+        const updatedFavorites = favorites.filter(listing => listing._id !== listingId);
+        setFavorites(updatedFavorites);
+        setFilteredFavorites(updatedFavorites);
+        // Don't show alert, let the heart icon provide feedback
       } else {
         Alert.alert('Error', result.error);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to delete listing');
+      Alert.alert('Error', 'Failed to remove from favorites');
     }
-  };
-
-  const handleEditListing = (listing) => {
-    setSelectedListing(listing);
-    setIsEditModalVisible(true);
-  };
-
-  const handleListingUpdated = (updatedListing) => {
-    const updatedListings = myListings.map(listing =>
-      listing._id === updatedListing._id ? updatedListing : listing
-    );
-    setMyListings(updatedListings);
-    setFilteredListings(updatedListings);
-    setIsEditModalVisible(false);
-    setSelectedListing(null);
-  };
-
-  const handleListingAdded = (newListing) => {
-    const updatedListings = [newListing, ...myListings];
-    setMyListings(updatedListings);
-    setFilteredListings(updatedListings);
-    setIsAddModalVisible(false);
   };
 
   const formatPrice = (price) => {
@@ -177,12 +154,22 @@ const MyListingsScreen = ({ navigation }) => {
     return date.toLocaleDateString();
   };
 
-  const renderListing = (listing) => {
-    // Determine which image source to use (new imageUrl or legacy photo)
+  const handleListingPress = (listing) => {
+    setSelectedListing(listing);
+    setIsOptionsModalVisible(true);
+  };
+
+  const renderFavoriteListing = (listing) => {
     const imageSource = listing.imageUrl || listing.photo;
     
     return (
-      <View key={listing._id} style={dashboardStyles.listingCard}>
+      <TouchableOpacity 
+        key={listing._id} 
+        style={dashboardStyles.listingCard}
+        onPress={() => handleListingPress(listing)}
+        activeOpacity={0.8}
+        delayPressIn={0}
+      >
         {imageSource ? (
           <Image 
             source={{ uri: imageSource }} 
@@ -196,23 +183,7 @@ const MyListingsScreen = ({ navigation }) => {
           </View>
         )}
         <View style={dashboardStyles.cardContent}>
-          <View style={styles.cardHeader}>
-            <Text style={dashboardStyles.listingTitle}>{listing.title}</Text>
-            <View style={styles.actionsContainer}>
-              <TouchableOpacity 
-                style={styles.editButton}
-                onPress={() => handleEditListing(listing)}
-              >
-                <Text style={styles.editButtonText}>Edit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.deleteButton}
-                onPress={() => handleDeleteListing(listing._id, listing.title)}
-              >
-                <Text style={styles.deleteButtonText}>Delete</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          <Text style={dashboardStyles.listingTitle}>{listing.title}</Text>
           <Text style={dashboardStyles.listingDescription} numberOfLines={2}>
             {listing.description}
           </Text>
@@ -230,9 +201,18 @@ const MyListingsScreen = ({ navigation }) => {
           )}
         </View>
         
-        {/* Heart Icon for Favorites - Hidden for own listings */}
-        <HeartIcon listingId={listing._id} isOwnListing={true} />
-      </View>
+        {/* Heart Icon for Favorites */}
+        <HeartIcon 
+          listingId={listing._id} 
+          isOwnListing={listing.seller?._id === currentUserId}
+          onFavoriteChange={(listingId, isFavorited) => {
+            if (!isFavorited) {
+              // If unfavorited, remove from local list
+              handleRemoveFromFavorites(listingId);
+            }
+          }}
+        />
+      </TouchableOpacity>
     );
   };
 
@@ -243,7 +223,7 @@ const MyListingsScreen = ({ navigation }) => {
         <TouchableOpacity onPress={handleMenuPress} style={dashboardStyles.menuButton}>
           <Text style={{ color: '#fff', fontSize: 18 }}>☰</Text>
         </TouchableOpacity>
-        <Text style={dashboardStyles.headerTitle}>📝 My Listings</Text>
+        <Text style={dashboardStyles.headerTitle}>My Favorites</Text>
         <TouchableOpacity onPress={handleLogout}>
           <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Logout</Text>
         </TouchableOpacity>
@@ -253,7 +233,7 @@ const MyListingsScreen = ({ navigation }) => {
       <View style={dashboardStyles.searchContainer}>
         <TextInput
           style={dashboardStyles.searchInput}
-          placeholder="Search my listings..."
+          placeholder="Search favorites..."
           value={searchQuery}
           onChangeText={handleSearch}
           clearButtonMode="while-editing"
@@ -262,10 +242,10 @@ const MyListingsScreen = ({ navigation }) => {
 
       {/* Content */}
       <FlatList
-        data={filteredListings}
-        renderItem={({ item }) => renderListing(item)}
+        data={filteredFavorites}
+        renderItem={({ item }) => renderFavoriteListing(item)}
         keyExtractor={(item) => item._id}
-        contentContainerStyle={filteredListings.length === 0 ? dashboardStyles.scrollContainer : null}
+        contentContainerStyle={filteredFavorites.length === 0 ? dashboardStyles.scrollContainer : null}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
         removeClippedSubviews={true}
@@ -276,7 +256,7 @@ const MyListingsScreen = ({ navigation }) => {
         ListEmptyComponent={() => (
           <View style={dashboardStyles.emptyContainer}>
             {isLoading ? (
-              <Text style={dashboardStyles.emptyText}>Loading your listings...</Text>
+              <Text style={dashboardStyles.emptyText}>Loading favorites...</Text>
             ) : searchQuery ? (
               <>
                 <Text style={dashboardStyles.emptyText}>No results found</Text>
@@ -286,9 +266,9 @@ const MyListingsScreen = ({ navigation }) => {
               </>
             ) : (
               <>
-                <Text style={dashboardStyles.emptyText}>No listings yet</Text>
+                <Text style={dashboardStyles.emptyText}>No favorites yet</Text>
                 <Text style={dashboardStyles.emptySubtext}>
-                  Create your first listing to get started!
+                  Start adding listings to your favorites by tapping the heart icon!
                 </Text>
               </>
             )}
@@ -301,17 +281,6 @@ const MyListingsScreen = ({ navigation }) => {
         visible={isAddModalVisible}
         onClose={() => setIsAddModalVisible(false)}
         onListingAdded={handleListingAdded}
-      />
-
-      {/* Edit Listing Modal */}
-      <EditListingModal
-        visible={isEditModalVisible}
-        onClose={() => {
-          setIsEditModalVisible(false);
-          setSelectedListing(null);
-        }}
-        listing={selectedListing}
-        onListingUpdated={handleListingUpdated}
       />
 
       {/* Menu Modal */}
@@ -343,57 +312,27 @@ const MyListingsScreen = ({ navigation }) => {
             
             <TouchableOpacity 
               style={dashboardStyles.modalItem} 
-              onPress={handleFavorites}
+              onPress={handleMyListings}
             >
-              <Text style={dashboardStyles.modalItemText}>❤️ Favorites</Text>
+              <Text style={dashboardStyles.modalItemText}>📝 My Listings</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
+
       {/* Listing Options Modal */}
       <ListingOptionsModal
         visible={isOptionsModalVisible}
         onClose={() => setIsOptionsModalVisible(false)}
         listing={selectedListing}
-        currentUserId={null} // Not needed for own listings
+        currentUserId={currentUserId}
       />
     </SafeAreaView>
   );
 };
 
 const styles = {
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  editButton: {
-    backgroundColor: '#3498db',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  editButtonText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  deleteButton: {
-    backgroundColor: '#e74c3c',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
+  // Remove old styles as we're using dashboardStyles now
 };
 
-export default MyListingsScreen;
+export default FavoritesScreen;

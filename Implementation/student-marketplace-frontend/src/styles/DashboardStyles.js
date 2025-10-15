@@ -79,9 +79,17 @@ export const dashboardStyles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.lg,
   },
+  scrollContainer: {
+    paddingVertical: spacing.lg,
+  },
   
   // Loading styles
   loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -115,8 +123,11 @@ export const dashboardStyles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: borderRadius.xl,
     marginBottom: spacing.md,
+    marginHorizontal: spacing.md,
     overflow: 'hidden',
     ...shadows.medium,
+    // Prevent TouchableOpacity expansion
+    transform: [{ scale: 1 }],
   },
   listingImage: {
     width: '100%',
@@ -175,5 +186,11 @@ export const dashboardStyles = StyleSheet.create({
   listingDate: {
     fontSize: typography.xs,
     color: colors.lightGray,
+  },
+  sellerName: {
+    fontSize: typography.sm,
+    color: colors.gray,
+    fontStyle: 'italic',
+    marginTop: spacing.xs,
   },
 });

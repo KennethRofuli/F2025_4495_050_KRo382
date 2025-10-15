@@ -23,12 +23,64 @@ const AddListingModal = ({ visible, onClose, onListingAdded }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Cloudinary configuration
+  const CLOUDINARY_CLOUD_NAME = 'dyxsxxxhc'; // Your cloud name
+  const CLOUDINARY_UPLOAD_PRESET = 'student-marketplace'; // Your custom preset (make sure it's UNSIGNED!)
+
   const resetForm = () => {
     setTitle('');
     setDescription('');
     setPrice('');
     setCategory('');
     setSelectedImage(null);
+  };
+
+  // Upload image to Cloudinary
+  const uploadToCloudinary = async (imageUri) => {
+    try {
+      console.log('📤 Starting Cloudinary upload...');
+      
+      const data = new FormData();
+      data.append('file', {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: 'listing.jpg',
+      });
+      data.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: 'POST',
+          body: data,
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      const result = await response.json();
+      console.log('📋 Cloudinary response:', result);
+      
+      if (result.error) {
+        console.error('❌ Cloudinary error details:', result.error);
+        throw new Error(result.error.message);
+      }
+
+      if (!response.ok) {
+        console.error('❌ HTTP error:', response.status, response.statusText);
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+
+      console.log('✅ Cloudinary upload successful:', result.secure_url);
+      return {
+        url: result.secure_url,
+        publicId: result.public_id,
+      };
+    } catch (error) {
+      console.error('❌ Cloudinary upload failed:', error);
+      throw error;
+    }
   };
 
   const requestPermissions = async () => {
@@ -147,17 +199,30 @@ const AddListingModal = ({ visible, onClose, onListingAdded }) => {
     setIsLoading(true);
     
     try {
+      let imageUrl = null;
+      let cloudinaryId = null;
+
+      // Upload image to Cloudinary if selected
+      if (selectedImage) {
+        console.log('📤 Uploading image to Cloudinary...');
+        const uploadResult = await uploadToCloudinary(selectedImage.uri);
+        imageUrl = uploadResult.url;
+        cloudinaryId = uploadResult.publicId;
+        console.log('✅ Image uploaded successfully');
+      }
+
       const listingData = {
         title: title.trim(),
         description: description.trim(),
         price: parseFloat(price),
         category: category.trim(),
-        photo: selectedImage ? `data:image/jpeg;base64,${selectedImage.base64}` : null,
+        imageUrl: imageUrl, // Send Cloudinary URL instead of base64
+        cloudinaryId: cloudinaryId, // For potential deletion later
       };
 
       console.log('📝 Creating listing:', {
         ...listingData,
-        photo: selectedImage ? `Image attached (${selectedImage.base64.length} chars)` : 'No image'
+        imageUrl: imageUrl ? 'Image URL attached' : 'No image'
       });
 
       const result = await listingsAPI.createListing(listingData);
@@ -256,16 +321,18 @@ const AddListingModal = ({ visible, onClose, onListingAdded }) => {
                 {selectedImage ? (
                   <View style={addListingModalStyles.imageContainer}>
                     <Image source={{ uri: selectedImage.uri }} style={addListingModalStyles.imagePreview} />
-                    <TouchableOpacity 
-                      style={addListingModalStyles.changeImageButton} 
-                      onPress={pickImage}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={addListingModalStyles.changeImageButtonText}>Change Photo</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={addListingModalStyles.removeImageButton} onPress={removeImage}>
-                      <Text style={addListingModalStyles.removeImageButtonText}>Remove</Text>
-                    </TouchableOpacity>
+                    <View style={addListingModalStyles.imageButtonsContainer}>
+                      <TouchableOpacity 
+                        style={addListingModalStyles.changeImageButton} 
+                        onPress={pickImage}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={addListingModalStyles.changeImageButtonText}>Change Photo</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={addListingModalStyles.removeImageButton} onPress={removeImage}>
+                        <Text style={addListingModalStyles.removeImageButtonText}>Remove</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 ) : (
                   <TouchableOpacity 

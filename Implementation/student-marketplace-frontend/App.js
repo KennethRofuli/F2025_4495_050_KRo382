@@ -7,6 +7,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import MyListingsScreen from './src/screens/MyListingsScreen';
+import FavoritesScreen from './src/screens/FavoritesScreen';
 
 const Stack = createStackNavigator();
 
@@ -56,6 +57,14 @@ export default function App() {
             component={MyListingsScreen}
             options={{ 
               title: 'My Listings',
+              headerShown: false
+            }}
+          />
+          <Stack.Screen 
+            name="Favorites" 
+            component={FavoritesScreen}
+            options={{ 
+              title: 'Favorites',
               headerShown: false
             }}
           />

@@ -3,13 +3,16 @@ const Listing = require("../models/Listing");
 // Create a new listing
 exports.createListing = async (req, res) => {
   try {
-    const { title, description, price, category, photo } = req.body;
+    const { title, description, price, category, photo, imageUrl, cloudinaryId } = req.body;
+    
     const listing = await Listing.create({
       title,
       description,
       price,
       category,
-      photo,
+      photo: photo || null, // Legacy base64 support
+      imageUrl: imageUrl || null, // New Cloudinary URL
+      cloudinaryId: cloudinaryId || null, // Cloudinary public ID for deletion
       seller: req.user.id // This comes from auth middleware
     });
     

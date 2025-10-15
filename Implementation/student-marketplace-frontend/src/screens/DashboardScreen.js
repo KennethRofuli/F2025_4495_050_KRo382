@@ -3,7 +3,7 @@ import {
   View,
   Text,
   TouchableOpacity,
-  ScrollView,
+  FlatList,
   RefreshControl,
   Alert,
   Image,
@@ -13,6 +13,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { listingsAPI, authAPI } from '../services/api';
 import AddListingModal from '../components/AddListingModal';
+import HeartIcon from '../components/HeartIcon';
+import ListingOptionsModal from '../components/ListingOptionsModal';
 import { dashboardStyles } from '../styles/DashboardStyles';
 
 const DashboardScreen = ({ navigation }) => {
@@ -22,11 +24,20 @@ const DashboardScreen = ({ navigation }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const [isOptionsModalVisible, setIsOptionsModalVisible] = useState(false);
+  const [selectedListing, setSelectedListing] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   useEffect(() => {
     loadListings();
+    getCurrentUser();
   }, []);
+
+  const getCurrentUser = async () => {
+    const userId = await authAPI.getCurrentUserId();
+    setCurrentUserId(userId);
+  };
 
   const loadListings = async () => {
     try {
@@ -84,6 +95,11 @@ const DashboardScreen = ({ navigation }) => {
     navigation.navigate('MyListings');
   };
 
+  const handleFavorites = () => {
+    setIsMenuVisible(false);
+    navigation.navigate('Favorites');
+  };
+
   const handleSearch = (query) => {
     setSearchQuery(query);
     
@@ -107,7 +123,11 @@ const DashboardScreen = ({ navigation }) => {
   };
 
   const formatPrice = (price) => {
-    return `$${price?.toFixed(2) || '0.00'}`;
+    const numPrice = Number(price) || 0;
+    return `$${numPrice.toLocaleString('en-US', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    })}`;
   };
 
   const formatDate = (dateString) => {
@@ -115,37 +135,62 @@ const DashboardScreen = ({ navigation }) => {
     return date.toLocaleDateString();
   };
 
-  const renderListing = (listing) => (
-    <View key={listing._id} style={dashboardStyles.listingCard}>
-      {listing.photo ? (
-        <Image 
-          source={{ uri: listing.photo }} 
-          style={dashboardStyles.listingImage}
-          defaultSource={require('../../assets/icon.png')}
-          onError={() => console.log('Image failed to load')}
-        />
-      ) : (
-        <View style={dashboardStyles.placeholderImage}>
-          <Text style={dashboardStyles.placeholderText}>No Image</Text>
-        </View>
-      )}
-      <View style={dashboardStyles.cardContent}>
-        <Text style={dashboardStyles.listingTitle}>{listing.title}</Text>
-        <Text style={dashboardStyles.listingDescription} numberOfLines={2}>
-          {listing.description}
-        </Text>
-        <View style={dashboardStyles.listingFooter}>
-          <Text style={dashboardStyles.listingPrice}>{formatPrice(listing.price)}</Text>
-          <View style={dashboardStyles.listingMeta}>
-            <Text style={dashboardStyles.listingCategory}>{listing.category}</Text>
-            <Text style={dashboardStyles.listingDate}>
-              {formatDate(listing.createdAt)}
-            </Text>
+  const handleListingPress = (listing) => {
+    setSelectedListing(listing);
+    setIsOptionsModalVisible(true);
+  };
+
+  const renderListing = (listing) => {
+    // Determine which image source to use (new imageUrl or legacy photo)
+    const imageSource = listing.imageUrl || listing.photo;
+    
+    return (
+      <TouchableOpacity 
+        key={listing._id} 
+        style={dashboardStyles.listingCard}
+        onPress={() => handleListingPress(listing)}
+        activeOpacity={0.8}
+        delayPressIn={0}
+      >
+        {imageSource ? (
+          <Image 
+            source={{ uri: imageSource }} 
+            style={dashboardStyles.listingImage}
+            defaultSource={require('../../assets/icon.png')}
+            onError={() => console.log('Image failed to load')}
+          />
+        ) : (
+          <View style={dashboardStyles.placeholderImage}>
+            <Text style={dashboardStyles.placeholderText}>No Image</Text>
           </View>
+        )}
+        <View style={dashboardStyles.cardContent}>
+          <Text style={dashboardStyles.listingTitle}>{listing.title}</Text>
+          <Text style={dashboardStyles.listingDescription} numberOfLines={2}>
+            {listing.description}
+          </Text>
+          <View style={dashboardStyles.listingFooter}>
+            <Text style={dashboardStyles.listingPrice}>{formatPrice(listing.price)}</Text>
+            <View style={dashboardStyles.listingMeta}>
+              <Text style={dashboardStyles.listingCategory}>{listing.category}</Text>
+              <Text style={dashboardStyles.listingDate}>
+                {formatDate(listing.createdAt)}
+              </Text>
+            </View>
+          </View>
+          {listing.seller?.name && (
+            <Text style={dashboardStyles.sellerName}>by {listing.seller.name}</Text>
+          )}
         </View>
-      </View>
-    </View>
-  );
+        
+        {/* Heart Icon for Favorites */}
+        <HeartIcon 
+          listingId={listing._id} 
+          isOwnListing={listing.seller?._id === currentUserId}
+        />
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView style={dashboardStyles.container}>
@@ -172,19 +217,23 @@ const DashboardScreen = ({ navigation }) => {
       </View>
 
       {/* Listings */}
-      <ScrollView
-        style={dashboardStyles.content}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
-        }
-      >
-        {isLoading ? (
-          <View style={dashboardStyles.loadingContainer}>
-            <Text style={dashboardStyles.loadingText}>Loading listings...</Text>
-          </View>
-        ) : filteredListings.length === 0 ? (
+      <FlatList
+        data={filteredListings}
+        renderItem={({ item }) => renderListing(item)}
+        keyExtractor={(item) => item._id}
+        contentContainerStyle={filteredListings.length === 0 ? dashboardStyles.scrollContainer : null}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={8}
+        windowSize={5}
+        ListEmptyComponent={() => (
           <View style={dashboardStyles.emptyContainer}>
-            {searchQuery ? (
+            {isLoading ? (
+              <Text style={dashboardStyles.emptyText}>Loading listings...</Text>
+            ) : searchQuery ? (
               <>
                 <Text style={dashboardStyles.emptyText}>No results found</Text>
                 <Text style={dashboardStyles.emptySubtext}>Try searching for something else</Text>
@@ -196,12 +245,8 @@ const DashboardScreen = ({ navigation }) => {
               </>
             )}
           </View>
-        ) : (
-          <View>
-            {filteredListings.map(renderListing)}
-          </View>
         )}
-      </ScrollView>
+      />
 
       {/* Add Listing Modal */}
       <AddListingModal
@@ -231,6 +276,13 @@ const DashboardScreen = ({ navigation }) => {
             </TouchableOpacity>
             
             <TouchableOpacity 
+              style={[dashboardStyles.modalItem, { borderBottomWidth: 1, borderBottomColor: '#ecf0f1' }]} 
+              onPress={handleFavorites}
+            >
+              <Text style={dashboardStyles.modalItemText}>❤️ Favorites</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
               style={dashboardStyles.modalItem} 
               onPress={handleMyListings}
             >
@@ -239,6 +291,14 @@ const DashboardScreen = ({ navigation }) => {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* Listing Options Modal */}
+      <ListingOptionsModal
+        visible={isOptionsModalVisible}
+        onClose={() => setIsOptionsModalVisible(false)}
+        listing={selectedListing}
+        currentUserId={currentUserId}
+      />
     </SafeAreaView>
   );
 };
