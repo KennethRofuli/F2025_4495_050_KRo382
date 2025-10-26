@@ -7,7 +7,13 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   campus: { type: String, required: true },
   avatar: { type: String },
-  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Listing' }]
+  favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Listing' }],
+  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  isActive: { type: Boolean, default: true },
+  isSuspended: { type: Boolean, default: false },
+  suspendedUntil: { type: Date, default: null },
+  suspensionReason: { type: String, default: null },
+  reportCount: { type: Number, default: 0 }
 }, { timestamps: true });
 
 userSchema.pre("save", async function (next) {

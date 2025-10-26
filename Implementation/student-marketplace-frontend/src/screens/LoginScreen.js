@@ -31,11 +31,19 @@ const LoginScreen = ({ navigation }) => {
       
       if (result.success) {
         console.log('✅ User logged in:', result.data.user);
-        // Navigate to Dashboard
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Dashboard' }],
-        });
+        
+        // Check if user is admin and redirect accordingly
+        if (result.data.user.role === 'admin') {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'AdminDashboard' }],
+          });
+        } else {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Dashboard' }],
+          });
+        }
       } else {
         Alert.alert('Error', result.error);
       }

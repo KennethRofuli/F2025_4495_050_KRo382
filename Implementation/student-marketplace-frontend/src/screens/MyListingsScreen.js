@@ -29,10 +29,17 @@ const MyListingsScreen = ({ navigation }) => {
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isOptionsModalVisible, setIsOptionsModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   useEffect(() => {
     loadMyListings();
+    getCurrentUser();
   }, []);
+
+  const getCurrentUser = async () => {
+    const userId = await authAPI.getCurrentUserId();
+    setCurrentUserId(userId);
+  };
 
   const loadMyListings = async () => {
     try {
@@ -355,7 +362,8 @@ const MyListingsScreen = ({ navigation }) => {
         visible={isOptionsModalVisible}
         onClose={() => setIsOptionsModalVisible(false)}
         listing={selectedListing}
-        currentUserId={null} // Not needed for own listings
+        currentUserId={currentUserId}
+        onListingUpdated={loadMyListings}
       />
     </SafeAreaView>
   );

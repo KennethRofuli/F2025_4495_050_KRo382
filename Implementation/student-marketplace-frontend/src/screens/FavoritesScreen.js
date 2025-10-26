@@ -326,6 +326,7 @@ const FavoritesScreen = ({ navigation }) => {
         onClose={() => setIsOptionsModalVisible(false)}
         listing={selectedListing}
         currentUserId={currentUserId}
+        onListingUpdated={loadFavorites}
       />
     </SafeAreaView>
   );

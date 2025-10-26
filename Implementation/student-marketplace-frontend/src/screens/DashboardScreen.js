@@ -11,7 +11,7 @@ import {
   TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { listingsAPI, authAPI } from '../services/api';
+import { listingsAPI, authAPI, tokenManager } from '../services/api';
 import AddListingModal from '../components/AddListingModal';
 import HeartIcon from '../components/HeartIcon';
 import ListingOptionsModal from '../components/ListingOptionsModal';
@@ -28,15 +28,42 @@ const DashboardScreen = ({ navigation }) => {
   const [selectedListing, setSelectedListing] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     loadListings();
     getCurrentUser();
   }, []);
 
+  // Add focus listener to refresh user data when screen comes into focus
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      getCurrentUser(); // Refresh user data when screen is focused
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
   const getCurrentUser = async () => {
-    const userId = await authAPI.getCurrentUserId();
-    setCurrentUserId(userId);
+    try {
+      const userId = await authAPI.getCurrentUserId();
+      setCurrentUserId(userId);
+      
+      // Get user details from token
+      const token = await tokenManager.getToken();
+      if (token) {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        
+        const decoded = JSON.parse(jsonPayload);
+        setCurrentUser(decoded);
+      }
+    } catch (error) {
+      console.log('Error getting user details:', error);
+    }
   };
 
   const loadListings = async () => {
@@ -98,6 +125,11 @@ const DashboardScreen = ({ navigation }) => {
   const handleFavorites = () => {
     setIsMenuVisible(false);
     navigation.navigate('Favorites');
+  };
+
+  const handleAdminDashboard = () => {
+    setIsMenuVisible(false);
+    navigation.navigate('AdminDashboard');
   };
 
   const handleSearch = (query) => {
@@ -282,6 +314,15 @@ const DashboardScreen = ({ navigation }) => {
               <Text style={dashboardStyles.modalItemText}>❤️ Favorites</Text>
             </TouchableOpacity>
             
+            {currentUser?.role === 'admin' && (
+              <TouchableOpacity 
+                style={[dashboardStyles.modalItem, { borderBottomWidth: 1, borderBottomColor: '#ecf0f1' }]} 
+                onPress={handleAdminDashboard}
+              >
+                <Text style={dashboardStyles.modalItemText}>🛡️ Admin Dashboard</Text>
+              </TouchableOpacity>
+            )}
+            
             <TouchableOpacity 
               style={dashboardStyles.modalItem} 
               onPress={handleMyListings}
@@ -298,6 +339,7 @@ const DashboardScreen = ({ navigation }) => {
         onClose={() => setIsOptionsModalVisible(false)}
         listing={selectedListing}
         currentUserId={currentUserId}
+        onListingUpdated={loadListings}
       />
     </SafeAreaView>
   );

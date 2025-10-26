@@ -4,6 +4,7 @@ import * as SecureStore from 'expo-secure-store';
 // Base URL for your backend API
 // Using local IP address instead of localhost for device/simulator access
 const BASE_URL = 'http://10.0.0.26:5000/api';
+//const BASE_URL = 'https://studentmartketplace-backend.onrender.com/api';
 
 // Create axios instance
 const api = axios.create({
@@ -340,6 +341,154 @@ export const favoritesAPI = {
       return {
         success: false,
         error: error.response?.data?.error || 'Failed to check favorite status',
+      };
+    }
+  },
+};
+
+// Reports API methods
+export const reportsAPI = {
+  // Submit a report
+  async submitReport(listingId, reason, description = '') {
+    try {
+      const response = await api.post('/reports', {
+        listingId,
+        reason,
+        description,
+      });
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to submit report',
+      };
+    }
+  },
+
+  // Get user's reports
+  async getMyReports() {
+    try {
+      const response = await api.get('/reports/my-reports');
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to fetch reports',
+      };
+    }
+  },
+};
+
+// Admin API methods
+export const adminAPI = {
+  // Get dashboard stats
+  async getDashboardStats() {
+    try {
+      const response = await api.get('/admin/dashboard/stats');
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to fetch dashboard stats',
+      };
+    }
+  },
+
+  // Get all reports
+  async getAllReports(status = 'all', page = 1) {
+    try {
+      const response = await api.get(`/admin/reports?status=${status}&page=${page}`);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to fetch reports',
+      };
+    }
+  },
+
+  // Get users with reports
+  async getUsersWithReports(page = 1) {
+    try {
+      const response = await api.get(`/admin/users?page=${page}`);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to fetch users',
+      };
+    }
+  },
+
+  // Update report
+  async updateReport(reportId, status, actionTaken, adminNotes) {
+    try {
+      const response = await api.put(`/admin/reports/${reportId}`, {
+        status,
+        actionTaken,
+        adminNotes,
+      });
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to update report',
+      };
+    }
+  },
+
+  // Moderate user
+  async moderateUser(userId, action, duration, reason) {
+    try {
+      const response = await api.put(`/admin/users/${userId}/moderate`, {
+        action,
+        duration,
+        reason,
+      });
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to moderate user',
+      };
+    }
+  },
+
+  // Delete listing
+  async deleteListing(listingId, reason) {
+    try {
+      const response = await api.delete(`/admin/listings/${listingId}`, {
+        data: { reason },
+      });
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to delete listing',
       };
     }
   },
