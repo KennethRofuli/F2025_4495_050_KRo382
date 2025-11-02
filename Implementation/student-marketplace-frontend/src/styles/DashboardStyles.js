@@ -193,4 +193,14 @@ export const dashboardStyles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: spacing.xs,
   },
+  sellerSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.xs,
+    flexWrap: 'wrap',
+  },
+  sellerRating: {
+    marginLeft: spacing.sm,
+    marginTop: 2,
+  },
 });

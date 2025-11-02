@@ -14,6 +14,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { listingsAPI, authAPI, tokenManager } from '../services/api';
 import AddListingModal from '../components/AddListingModal';
 import HeartIcon from '../components/HeartIcon';
+import { RatingBadge } from '../components/RatingDisplay';
+import FloatingMessageButton from '../components/FloatingMessageButton';
+import MessagesModal from '../components/MessagesModal';
 import ListingOptionsModal from '../components/ListingOptionsModal';
 import { dashboardStyles } from '../styles/DashboardStyles';
 
@@ -29,6 +32,8 @@ const DashboardScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentUserId, setCurrentUserId] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [showMessagesModal, setShowMessagesModal] = useState(false);
+  const [messageRefreshTrigger, setMessageRefreshTrigger] = useState(0);
 
   useEffect(() => {
     loadListings();
@@ -132,6 +137,11 @@ const DashboardScreen = ({ navigation }) => {
     navigation.navigate('AdminDashboard');
   };
 
+  const handleProfile = () => {
+    setIsMenuVisible(false);
+    navigation.navigate('Profile');
+  };
+
   const handleSearch = (query) => {
     setSearchQuery(query);
     
@@ -211,7 +221,16 @@ const DashboardScreen = ({ navigation }) => {
             </View>
           </View>
           {listing.seller?.name && (
-            <Text style={dashboardStyles.sellerName}>by {listing.seller.name}</Text>
+            <View style={dashboardStyles.sellerSection}>
+              <Text style={dashboardStyles.sellerName}>by {listing.seller.name}</Text>
+              {listing.seller.averageRating > 0 && (
+                <RatingBadge 
+                  rating={listing.seller.averageRating} 
+                  totalRatings={listing.seller.totalRatings}
+                  style={dashboardStyles.sellerRating}
+                />
+              )}
+            </View>
           )}
         </View>
         
@@ -324,10 +343,17 @@ const DashboardScreen = ({ navigation }) => {
             )}
             
             <TouchableOpacity 
-              style={dashboardStyles.modalItem} 
+              style={[dashboardStyles.modalItem, { borderBottomWidth: 1, borderBottomColor: '#ecf0f1' }]} 
               onPress={handleMyListings}
             >
               <Text style={dashboardStyles.modalItemText}>📝 My Listings</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={dashboardStyles.modalItem} 
+              onPress={handleProfile}
+            >
+              <Text style={dashboardStyles.modalItemText}>👤 Profile</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -340,6 +366,25 @@ const DashboardScreen = ({ navigation }) => {
         listing={selectedListing}
         currentUserId={currentUserId}
         onListingUpdated={loadListings}
+      />
+
+      {/* Floating Message Button */}
+      <FloatingMessageButton
+        onPress={() => setShowMessagesModal(true)}
+        currentUserId={currentUserId}
+        refreshTrigger={messageRefreshTrigger}
+      />
+
+      {/* Messages Modal */}
+      <MessagesModal
+        visible={showMessagesModal}
+        onClose={() => {
+          setShowMessagesModal(false);
+          // Trigger refresh of floating button after a small delay to avoid blocking UI
+          setTimeout(() => {
+            setMessageRefreshTrigger(prev => prev + 1);
+          }, 100);
+        }}
       />
     </SafeAreaView>
   );

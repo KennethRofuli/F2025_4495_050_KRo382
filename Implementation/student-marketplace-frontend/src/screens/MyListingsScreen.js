@@ -14,9 +14,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { listingsAPI, authAPI } from '../services/api';
 import { dashboardStyles } from '../styles/DashboardStyles';
 import EditListingModal from '../components/EditListingModal';
+import { RatingBadge } from '../components/RatingDisplay';
 import AddListingModal from '../components/AddListingModal';
 import ListingOptionsModal from '../components/ListingOptionsModal';
 import HeartIcon from '../components/HeartIcon';
+import FloatingMessageButton from '../components/FloatingMessageButton';
+import MessagesModal from '../components/MessagesModal';
 
 const MyListingsScreen = ({ navigation }) => {
   const [myListings, setMyListings] = useState([]);
@@ -30,6 +33,8 @@ const MyListingsScreen = ({ navigation }) => {
   const [isOptionsModalVisible, setIsOptionsModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [showMessagesModal, setShowMessagesModal] = useState(false);
+  const [messageRefreshTrigger, setMessageRefreshTrigger] = useState(0);
 
   useEffect(() => {
     loadMyListings();
@@ -100,6 +105,11 @@ const MyListingsScreen = ({ navigation }) => {
   const handleFavorites = () => {
     setIsMenuVisible(false);
     navigation.navigate('Favorites');
+  };
+
+  const handleProfile = () => {
+    setIsMenuVisible(false);
+    navigation.navigate('Profile');
   };
 
   const handleSearch = (query) => {
@@ -233,7 +243,16 @@ const MyListingsScreen = ({ navigation }) => {
             </View>
           </View>
           {listing.seller?.name && (
-            <Text style={dashboardStyles.sellerName}>by {listing.seller.name}</Text>
+            <View style={dashboardStyles.sellerSection}>
+              <Text style={dashboardStyles.sellerName}>by {listing.seller.name}</Text>
+              {listing.seller.averageRating > 0 && (
+                <RatingBadge 
+                  rating={listing.seller.averageRating} 
+                  totalRatings={listing.seller.totalRatings}
+                  style={dashboardStyles.sellerRating}
+                />
+              )}
+            </View>
           )}
         </View>
         
@@ -349,10 +368,17 @@ const MyListingsScreen = ({ navigation }) => {
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={dashboardStyles.modalItem} 
+              style={[dashboardStyles.modalItem, { borderBottomWidth: 1, borderBottomColor: '#ecf0f1' }]} 
               onPress={handleFavorites}
             >
               <Text style={dashboardStyles.modalItemText}>❤️ Favorites</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={dashboardStyles.modalItem} 
+              onPress={handleProfile}
+            >
+              <Text style={dashboardStyles.modalItemText}>👤 Profile</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -364,6 +390,24 @@ const MyListingsScreen = ({ navigation }) => {
         listing={selectedListing}
         currentUserId={currentUserId}
         onListingUpdated={loadMyListings}
+      />
+
+      {/* Floating Message Button */}
+      <FloatingMessageButton 
+        onPress={() => setShowMessagesModal(true)} 
+        currentUserId={currentUserId}
+        refreshTrigger={messageRefreshTrigger}
+      />
+
+      {/* Messages Modal */}
+      <MessagesModal
+        visible={showMessagesModal}
+        onClose={() => {
+          setShowMessagesModal(false);
+          setTimeout(() => {
+            setMessageRefreshTrigger(prev => prev + 1);
+          }, 100);
+        }}
       />
     </SafeAreaView>
   );

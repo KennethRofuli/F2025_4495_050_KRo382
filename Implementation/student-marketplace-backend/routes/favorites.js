@@ -60,7 +60,7 @@ router.get('/', auth, async (req, res) => {
       path: 'favorites',
       populate: {
         path: 'seller',
-        select: 'name campus'
+        select: 'name campus averageRating totalRatings sellerRating sellerTransactions'
       }
     });
 

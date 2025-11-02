@@ -174,6 +174,54 @@ export const authAPI = {
       return null;
     }
   },
+
+  // Get user profile
+  async getProfile() {
+    try {
+      const response = await api.get('/auth/profile');
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to get profile',
+      };
+    }
+  },
+
+  // Update user profile
+  async updateProfile(profileData) {
+    try {
+      const response = await api.put('/auth/profile', profileData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to update profile',
+      };
+    }
+  },
+
+  // Change password
+  async changePassword(passwordData) {
+    try {
+      const response = await api.put('/auth/change-password', passwordData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to change password',
+      };
+    }
+  },
 };
 
 // Listings API methods
@@ -489,6 +537,203 @@ export const adminAPI = {
       return {
         success: false,
         error: error.response?.data?.error || 'Failed to delete listing',
+      };
+    }
+  },
+};
+
+// Rating API methods
+export const ratingAPI = {
+  // Create a new rating
+  async createRating(ratingData) {
+    try {
+      const response = await api.post('/ratings/create', ratingData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to create rating',
+      };
+    }
+  },
+
+  // Get ratings for a user
+  async getUserRatings(userId, params = {}) {
+    try {
+      const response = await api.get(`/ratings/user/${userId}`, { params });
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to fetch ratings',
+      };
+    }
+  },
+
+  // Get rating statistics for a user
+  async getUserRatingStats(userId) {
+    try {
+      const response = await api.get(`/ratings/stats/${userId}`);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to fetch rating stats',
+      };
+    }
+  },
+
+  // Update existing rating
+  async updateRating(ratingId, ratingData) {
+    try {
+      const response = await api.put(`/ratings/${ratingId}`, ratingData);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to update rating',
+      };
+    }
+  },
+
+  // Delete rating (admin only)
+  async deleteRating(ratingId) {
+    try {
+      const response = await api.delete(`/ratings/${ratingId}`);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to delete rating',
+      };
+    }
+  },
+
+  // Check if user can rate (has transaction with rated user)
+  async canUserRate(listingId, ratedUserId) {
+    try {
+      const response = await api.get(`/ratings/can-rate/${listingId}/${ratedUserId}`);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to check rating eligibility',
+      };
+    }
+  },
+
+  // Get rating for a specific transaction
+  async getTransactionRating(transactionId) {
+    try {
+      const response = await api.get(`/ratings/transaction/${transactionId}`);
+      return {
+        success: true,
+        data: response.data.rating, // Extract the rating from the response
+        hasRated: response.data.hasRated
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to fetch transaction rating',
+      };
+    }
+  },
+};
+
+// Messaging API methods
+export const messagingAPI = {
+  // Send a message
+  async sendMessage(receiverId, content, listingId = null) {
+    try {
+      const response = await api.post('/messages/send', {
+        receiverId,
+        content,
+        listingId
+      });
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to send message',
+      };
+    }
+  },
+
+  // Get conversation with a user (optionally for a specific listing)
+  async getConversation(userId, listingId = null, page = 1, limit = 50) {
+    try {
+      const url = listingId 
+        ? `/messages/conversation/${userId}/${listingId}`
+        : `/messages/conversation/${userId}`;
+      
+      const response = await api.get(url, {
+        params: { page, limit }
+      });
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to fetch messages',
+      };
+    }
+  },
+
+  // Get all conversations
+  async getConversations() {
+    try {
+      const response = await api.get('/messages/conversations');
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to fetch conversations',
+      };
+    }
+  },
+
+  // Mark messages as read (optionally for a specific listing)
+  async markAsRead(conversationUserId, listingId = null) {
+    try {
+      const url = listingId 
+        ? `/messages/read/${conversationUserId}/${listingId}`
+        : `/messages/read/${conversationUserId}`;
+      
+      const response = await api.put(url);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to mark as read',
       };
     }
   },

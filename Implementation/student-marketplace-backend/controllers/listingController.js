@@ -17,7 +17,7 @@ exports.createListing = async (req, res) => {
     });
     
     // Populate seller info for response
-    await listing.populate('seller', 'name email campus');
+    await listing.populate('seller', 'name email campus averageRating totalRatings sellerRating sellerTransactions');
     res.status(201).json(listing);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -33,7 +33,7 @@ exports.getAllListings = async (req, res) => {
     if (category) filter.category = category;
     
     const listings = await Listing.find(filter)
-      .populate('seller', 'name email campus')
+      .populate('seller', 'name email campus averageRating totalRatings sellerRating sellerTransactions')
       .sort({ createdAt: -1 });
     
     // Filter by campus if specified
@@ -54,7 +54,7 @@ exports.getAllListings = async (req, res) => {
 exports.getListingById = async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id)
-      .populate('seller', 'name email campus');
+      .populate('seller', 'name email campus averageRating totalRatings sellerRating sellerTransactions');
     
     if (!listing) {
       return res.status(404).json({ error: "Listing not found" });
@@ -84,7 +84,7 @@ exports.updateListing = async (req, res) => {
       req.params.id,
       req.body,
       { new: true, runValidators: true }
-    ).populate('seller', 'name email campus');
+    ).populate('seller', 'name email campus averageRating totalRatings sellerRating sellerTransactions');
     
     res.json(updatedListing);
   } catch (err) {
@@ -117,7 +117,7 @@ exports.deleteListing = async (req, res) => {
 exports.getMyListings = async (req, res) => {
   try {
     const listings = await Listing.find({ seller: req.user.id })
-      .populate('seller', 'name email campus')
+      .populate('seller', 'name email campus averageRating totalRatings sellerRating sellerTransactions')
       .sort({ createdAt: -1 });
     
     res.json(listings);

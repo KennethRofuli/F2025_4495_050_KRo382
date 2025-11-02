@@ -13,7 +13,16 @@ const userSchema = new mongoose.Schema({
   isSuspended: { type: Boolean, default: false },
   suspendedUntil: { type: Date, default: null },
   suspensionReason: { type: String, default: null },
-  reportCount: { type: Number, default: 0 }
+  reportCount: { type: Number, default: 0 },
+  // Rating system fields
+  averageRating: { type: Number, default: 0, min: 0, max: 5 },
+  totalRatings: { type: Number, default: 0 },
+  ratingSum: { type: Number, default: 0 },
+  // Seller/buyer specific ratings
+  sellerRating: { type: Number, default: 0, min: 0, max: 5 },
+  buyerRating: { type: Number, default: 0, min: 0, max: 5 },
+  sellerTransactions: { type: Number, default: 0 },
+  buyerTransactions: { type: Number, default: 0 }
 }, { timestamps: true });
 
 userSchema.pre("save", async function (next) {

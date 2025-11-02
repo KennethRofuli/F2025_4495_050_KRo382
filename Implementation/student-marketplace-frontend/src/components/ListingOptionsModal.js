@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -7,11 +7,52 @@ import {
   Alert,
   Image,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { listingOptionsModalStyles } from '../styles/ListingOptionsModalStyles';
-import { reportsAPI, listingsAPI } from '../services/api';
+import { reportsAPI, listingsAPI, ratingAPI } from '../services/api';
+import MessagingModal from './MessagingModal';
 
 const ListingOptionsModal = ({ visible, onClose, listing, currentUserId, onListingUpdated }) => {
   const isOwner = listing?.seller?._id === currentUserId;
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [existingRating, setExistingRating] = useState(null);
+  const [showMessagingModal, setShowMessagingModal] = useState(false);
+
+  // Load existing rating when modal opens
+  useEffect(() => {
+    if (visible && listing && !isOwner) {
+      loadExistingRating();
+    } else if (!visible) {
+      // Reset state when modal closes
+      setSelectedRating(0);
+      setExistingRating(null);
+    }
+  }, [visible, listing, isOwner]);
+
+  const loadExistingRating = async () => {
+    try {
+      // Create a transaction ID based on listing, current user, and seller (matches backend format)
+      const transactionId = `${listing._id}_${currentUserId}_${listing.seller._id}`;
+      console.log('🔍 Loading existing rating for transaction:', transactionId);
+      
+      const result = await ratingAPI.getTransactionRating(transactionId);
+      console.log('📊 Rating API result:', result);
+      
+      if (result.success && result.data) {
+        console.log('✅ Found existing rating:', result.data.rating);
+        setExistingRating(result.data);
+        setSelectedRating(result.data.rating);
+      } else {
+        console.log('❌ No existing rating found');
+        setExistingRating(null);
+        setSelectedRating(0);
+      }
+    } catch (error) {
+      console.log('💥 Error loading existing rating:', error);
+      setExistingRating(null);
+      setSelectedRating(0);
+    }
+  };
 
   const handleMessageSeller = () => {
     onClose();
@@ -21,8 +62,7 @@ const ListingOptionsModal = ({ visible, onClose, listing, currentUserId, onListi
       return;
     }
     
-    // TODO: Implement messaging functionality
-    Alert.alert('Message Seller', `Coming soon! You want to message ${listing.seller.name} about "${listing.title}"`);
+    setShowMessagingModal(true);
   };
 
   const handleEditListing = () => {
@@ -100,6 +140,94 @@ const ListingOptionsModal = ({ visible, onClose, listing, currentUserId, onListi
     }
   };
 
+  const handleStarPress = async (rating) => {
+    if (isOwner) {
+      return; // Silently do nothing for own listings
+    }
+
+    console.log('⭐ User clicked star rating:', rating);
+    setSelectedRating(rating);
+    
+    try {
+      const transactionId = `${listing._id}_${currentUserId}_${listing.seller._id}`;
+      console.log('🔄 Submitting rating with transactionId:', transactionId);
+      
+      const result = await ratingAPI.createRating({
+        ratedUserId: listing.seller._id,
+        listingId: listing._id,
+        transactionId: transactionId,
+        rating: rating,
+        review: '', // No review for quick star rating
+        ratingType: 'seller',
+        categories: {
+          communication: rating,
+          reliability: rating,
+          itemCondition: rating,
+          timeliness: rating
+        }
+      });
+      
+      console.log('💾 Rating submission result:', result);
+      
+      if (result.success) {
+        console.log('✅ Rating submitted successfully');
+        // Update existing rating state
+        setExistingRating(result.data);
+        // No alert - silent success for better UX
+      } else {
+        console.log('❌ Rating submission failed:', result.error);
+        Alert.alert('Error', result.error);
+        // Reset to previous rating on error
+        if (existingRating) {
+          setSelectedRating(existingRating.rating);
+        } else {
+          setSelectedRating(0);
+        }
+      }
+    } catch (error) {
+      console.log('💥 Rating submission error:', error);
+      Alert.alert('Error', 'Failed to submit rating. Please try again.');
+      // Reset to previous rating on error
+      if (existingRating) {
+        setSelectedRating(existingRating.rating);
+      } else {
+        setSelectedRating(0);
+      }
+    }
+  };
+
+  const StarRating = () => {
+    if (isOwner) return null; // Don't show stars for own listings
+    
+    return (
+      <View style={starRatingStyles.container}>
+        <Text style={starRatingStyles.title}>
+          {existingRating ? 'Your rating:' : 'Rate this seller:'}
+        </Text>
+        <View style={starRatingStyles.starsContainer}>
+          {[1, 2, 3, 4, 5].map((star) => (
+            <TouchableOpacity
+              key={star}
+              onPress={() => handleStarPress(star)}
+              style={starRatingStyles.starButton}
+            >
+              <Ionicons
+                name={star <= selectedRating ? 'star' : 'star-outline'}
+                size={30}
+                color={star <= selectedRating ? '#FFD700' : '#DDD'}
+              />
+            </TouchableOpacity>
+          ))}
+        </View>
+        {selectedRating > 0 && (
+          <Text style={starRatingStyles.ratingText}>
+            {existingRating ? 'Tap to change your rating' : `${selectedRating} star${selectedRating > 1 ? 's' : ''}`}
+          </Text>
+        )}
+      </View>
+    );
+  };
+
   if (!listing) return null;
 
   const formatPrice = (price) => {
@@ -107,6 +235,7 @@ const ListingOptionsModal = ({ visible, onClose, listing, currentUserId, onListi
   };
 
   return (
+    <>
     <Modal
       visible={visible}
       transparent={true}
@@ -159,6 +288,9 @@ const ListingOptionsModal = ({ visible, onClose, listing, currentUserId, onListi
               ) : (
                 // Non-owner actions
                 <>
+                  {/* Star Rating Section */}
+                  <StarRating />
+
                   <TouchableOpacity 
                     style={listingOptionsModalStyles.messageButton}
                     onPress={handleMessageSeller}
@@ -193,7 +325,47 @@ const ListingOptionsModal = ({ visible, onClose, listing, currentUserId, onListi
         </View>
       </TouchableOpacity>
     </Modal>
+
+    {/* Messaging Modal */}
+    <MessagingModal
+      visible={showMessagingModal}
+      onClose={() => setShowMessagingModal(false)}
+      listing={listing}
+      currentUserId={currentUserId}
+      receiverId={listing?.seller?._id}
+    />
+  </>
   );
+};
+
+// Star Rating Styles
+const starRatingStyles = {
+  container: {
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ecf0f1',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 10,
+  },
+  starsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 5,
+  },
+  starButton: {
+    paddingHorizontal: 4,
+  },
+  ratingText: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 5,
+  },
 };
 
 export default ListingOptionsModal;

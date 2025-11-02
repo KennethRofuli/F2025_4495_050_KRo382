@@ -9,6 +9,9 @@ import DashboardScreen from './src/screens/DashboardScreen';
 import AdminDashboardScreen from './src/screens/AdminDashboardScreen';
 import MyListingsScreen from './src/screens/MyListingsScreen';
 import FavoritesScreen from './src/screens/FavoritesScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
+import MessagesScreen from './src/screens/MessagesScreen';
+import UserProfileScreen from './src/screens/UserProfileScreen';
 
 const Stack = createStackNavigator();
 
@@ -75,6 +78,30 @@ export default function App() {
             component={FavoritesScreen}
             options={{ 
               title: 'Favorites',
+              headerShown: false
+            }}
+          />
+          <Stack.Screen 
+            name="Profile" 
+            component={ProfileScreen}
+            options={{ 
+              title: 'Profile',
+              headerShown: false
+            }}
+          />
+          <Stack.Screen 
+            name="Messages" 
+            component={MessagesScreen}
+            options={{ 
+              title: 'Messages',
+              headerShown: false
+            }}
+          />
+          <Stack.Screen 
+            name="UserProfile" 
+            component={UserProfileScreen}
+            options={{ 
+              title: 'User Profile',
               headerShown: false
             }}
           />
