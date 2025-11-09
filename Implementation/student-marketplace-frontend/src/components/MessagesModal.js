@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { messagingAPI, authAPI } from '../services/api';
+import { messagingAPI } from '../services/api';
+import { useCurrentUser } from '../hooks/useCurrentUser';
 import MessagingModal from './MessagingModal';
 
 const MessagesModal = ({ visible, onClose }) => {
@@ -19,21 +20,16 @@ const MessagesModal = ({ visible, onClose }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isLoadingConversations, setIsLoadingConversations] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState(null);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [showMessagingModal, setShowMessagingModal] = useState(false);
+  
+  const { currentUserId } = useCurrentUser();
 
   useEffect(() => {
-    if (visible) {
-      initializeScreen();
+    if (visible && currentUserId) {
+      loadConversations();
     }
-  }, [visible]);
-
-  const initializeScreen = async () => {
-    const userId = await authAPI.getCurrentUserId();
-    setCurrentUserId(userId);
-    loadConversations();
-  };
+  }, [visible, currentUserId]);
 
   const loadConversations = async () => {
     // Prevent multiple concurrent calls
@@ -47,12 +43,10 @@ const MessagesModal = ({ visible, onClose }) => {
         setLoading(true);
       }
       
-      console.log('📱 MessagesModal: Loading conversations...');
       const result = await messagingAPI.getConversations();
       
       if (result.success) {
         const newConversations = result.data.conversations || [];
-        console.log('📱 MessagesModal conversations count:', newConversations.length);
         setConversations(newConversations);
       } else {
         console.error('Failed to load conversations:', result.error);

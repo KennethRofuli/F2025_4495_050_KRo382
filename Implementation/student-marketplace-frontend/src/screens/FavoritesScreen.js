@@ -358,7 +358,6 @@ const FavoritesScreen = ({ navigation }) => {
       {/* Floating Message Button */}
       <FloatingMessageButton 
         onPress={() => setShowMessagesModal(true)} 
-        currentUserId={currentUserId}
         refreshTrigger={messageRefreshTrigger}
       />
 

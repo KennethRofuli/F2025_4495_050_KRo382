@@ -39,8 +39,6 @@ const MessagingModal = ({
         setLoading(true);
       }
       
-      console.log('Loading messages between:', currentUserId, 'and', receiverId, 'for listing:', listing?._id);
-      
       const result = await messagingAPI.getConversation(receiverId, listing?._id);
       if (result.success) {
         setMessages(result.data.messages || []);
@@ -63,10 +61,9 @@ const MessagingModal = ({
 
   const markMessagesAsRead = async () => {
     try {
-      console.log('Marking messages as read for user:', receiverId, 'listing:', listing?._id);
       const result = await messagingAPI.markAsRead(receiverId, listing?._id);
-      if (result.success) {
-        console.log('Messages marked as read successfully');
+      if (!result.success) {
+        console.error('Failed to mark messages as read:', result.error);
       }
     } catch (error) {
       console.error('Error marking messages as read:', error);
@@ -77,8 +74,6 @@ const MessagingModal = ({
     if (!newMessage.trim()) return;
 
     try {
-      console.log('Sending message:', newMessage);
-      
       const result = await messagingAPI.sendMessage(
         receiverId, 
         newMessage.trim(), 

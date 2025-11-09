@@ -7,11 +7,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { messagingAPI } from '../services/api';
+import { useCurrentUser } from '../hooks/useCurrentUser';
 
-const FloatingMessageButton = ({ onPress, currentUserId, refreshTrigger }) => {
+const FloatingMessageButton = ({ onPress, refreshTrigger }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [scaleAnim] = useState(new Animated.Value(1));
   const [isLoading, setIsLoading] = useState(false);
+  
+  const { currentUserId } = useCurrentUser();
 
   useEffect(() => {
     if (currentUserId) {
@@ -39,15 +42,12 @@ const FloatingMessageButton = ({ onPress, currentUserId, refreshTrigger }) => {
     
     try {
       setIsLoading(true);
-      console.log('🔵 FloatingButton: Loading unread count...');
       const result = await messagingAPI.getConversations();
       if (result.success) {
         const totalUnread = result.data.conversations?.reduce(
           (total, conv) => total + conv.unreadCount, 
           0
         ) || 0;
-        
-        console.log('🔵 FloatingButton: Total unread count:', totalUnread);
         
         if (totalUnread !== unreadCount) {
           const oldCount = unreadCount;
@@ -71,7 +71,7 @@ const FloatingMessageButton = ({ onPress, currentUserId, refreshTrigger }) => {
         }
       }
     } catch (error) {
-      console.log('Error loading unread count:', error);
+      console.error('Error loading unread count:', error);
     } finally {
       setIsLoading(false);
     }

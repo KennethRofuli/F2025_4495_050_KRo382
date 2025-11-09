@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { listingsAPI, authAPI, tokenManager } from '../services/api';
+import { imageUtils } from '../utils/helpers';
 import AddListingModal from '../components/AddListingModal';
 import HeartIcon from '../components/HeartIcon';
 import { RatingBadge } from '../components/RatingDisplay';
@@ -199,7 +200,7 @@ const DashboardScreen = ({ navigation }) => {
             source={{ uri: imageSource }} 
             style={dashboardStyles.listingImage}
             defaultSource={require('../../assets/icon.png')}
-            onError={() => console.log('Image failed to load')}
+            onError={imageUtils.onError}
           />
         ) : (
           <View style={dashboardStyles.placeholderImage}>
@@ -371,7 +372,6 @@ const DashboardScreen = ({ navigation }) => {
       {/* Floating Message Button */}
       <FloatingMessageButton
         onPress={() => setShowMessagesModal(true)}
-        currentUserId={currentUserId}
         refreshTrigger={messageRefreshTrigger}
       />
 

@@ -78,20 +78,14 @@ export const authAPI = {
   // Login user
   async login(email, password) {
     try {
-      console.log('🔐 Attempting login to:', `${BASE_URL}/auth/login`);
-      console.log('📧 Email:', email);
-      
       const response = await api.post('/auth/login', {
         email,
         password,
       });
       
-      console.log('✅ Login successful:', response.data);
-      
       // Store token if login successful
       if (response.data.token) {
         await tokenManager.setToken(response.data.token);
-        console.log('🔑 Token stored successfully');
       }
       
       return {
@@ -99,7 +93,7 @@ export const authAPI = {
         data: response.data,
       };
     } catch (error) {
-      console.log('❌ Login error:', error.response?.data || error.message);
+      console.error('Login error:', error.response?.data || error.message);
       return {
         success: false,
         error: error.response?.data?.error || 'Login failed',
@@ -110,9 +104,6 @@ export const authAPI = {
   // Register user
   async register(name, email, password, campus) {
     try {
-      console.log('👤 Attempting registration to:', `${BASE_URL}/auth/register`);
-      console.log('📧 Email:', email, '🏫 Campus:', campus);
-      
       const response = await api.post('/auth/register', {
         name,
         email,
@@ -120,14 +111,12 @@ export const authAPI = {
         campus,
       });
       
-      console.log('✅ Registration successful:', response.data);
-      
       return {
         success: true,
         data: response.data,
       };
     } catch (error) {
-      console.log('❌ Registration error:', error.response?.data || error.message);
+      console.error('Registration error:', error.response?.data || error.message);
       return {
         success: false,
         error: error.response?.data?.error || 'Registration failed',
