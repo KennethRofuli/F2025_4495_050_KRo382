@@ -347,6 +347,17 @@ const styles = {
   sendButtonDisabled: {
     backgroundColor: '#e0e0e0',
   },
+  unavailableCard: {
+    backgroundColor: '#f5f5f5',
+    borderColor: '#ddd',
+  },
+  unavailableTitle: {
+    color: '#999',
+    fontStyle: 'italic',
+  },
+  unavailablePrice: {
+    color: '#999',
+  },
 };
 
 export default MessagingModal;

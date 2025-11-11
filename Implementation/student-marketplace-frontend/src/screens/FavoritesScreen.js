@@ -26,7 +26,6 @@ const FavoritesScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isOptionsModalVisible, setIsOptionsModalVisible] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -90,27 +89,11 @@ const FavoritesScreen = ({ navigation }) => {
   };
 
   const handleAddListing = () => {
-    setIsMenuVisible(false);
     setIsAddModalVisible(true);
   };
 
-  const handleMenuPress = () => {
-    setIsMenuVisible(!isMenuVisible);
-  };
-
-  const handleMyListings = () => {
-    setIsMenuVisible(false);
-    navigation.navigate('MyListings');
-  };
-
-  const handleDashboard = () => {
-    setIsMenuVisible(false);
-    navigation.navigate('Dashboard');
-  };
-
-  const handleProfile = () => {
-    setIsMenuVisible(false);
-    navigation.navigate('Profile');
+  const handleBack = () => {
+    navigation.goBack();
   };
 
   const handleSearch = (query) => {
@@ -239,12 +222,12 @@ const FavoritesScreen = ({ navigation }) => {
     <SafeAreaView style={dashboardStyles.container}>
       {/* Header */}
       <View style={dashboardStyles.header}>
-        <TouchableOpacity onPress={handleMenuPress} style={dashboardStyles.menuButton}>
-          <Text style={{ color: '#fff', fontSize: 18 }}>☰</Text>
+        <TouchableOpacity onPress={handleBack} style={dashboardStyles.menuButton}>
+          <Text style={{ color: '#fff', fontSize: 16 }}>← Back</Text>
         </TouchableOpacity>
-        <Text style={dashboardStyles.headerTitle}>My Favorites</Text>
-        <TouchableOpacity onPress={handleLogout}>
-          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Logout</Text>
+        <Text style={dashboardStyles.headerTitle}>❤️ My Favorites</Text>
+        <TouchableOpacity onPress={handleAddListing}>
+          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>+ Add</Text>
         </TouchableOpacity>
       </View>
 
@@ -302,49 +285,7 @@ const FavoritesScreen = ({ navigation }) => {
         onListingAdded={handleListingAdded}
       />
 
-      {/* Menu Modal */}
-      <Modal
-        visible={isMenuVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setIsMenuVisible(false)}
-      >
-        <TouchableOpacity 
-          style={dashboardStyles.modalOverlay} 
-          activeOpacity={1} 
-          onPress={() => setIsMenuVisible(false)}
-        >
-          <View style={dashboardStyles.modalContent}>
-            <TouchableOpacity 
-              style={[dashboardStyles.modalItem, { borderBottomWidth: 1, borderBottomColor: '#ecf0f1' }]} 
-              onPress={handleAddListing}
-            >
-              <Text style={dashboardStyles.modalItemText}>➕ Add Listing</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[dashboardStyles.modalItem, { borderBottomWidth: 1, borderBottomColor: '#ecf0f1' }]} 
-              onPress={handleDashboard}
-            >
-              <Text style={dashboardStyles.modalItemText}>🏠 Dashboard</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[dashboardStyles.modalItem, { borderBottomWidth: 1, borderBottomColor: '#ecf0f1' }]} 
-              onPress={handleMyListings}
-            >
-              <Text style={dashboardStyles.modalItemText}>📝 My Listings</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={dashboardStyles.modalItem} 
-              onPress={handleProfile}
-            >
-              <Text style={dashboardStyles.modalItemText}>👤 Profile</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+
 
       {/* Listing Options Modal */}
       <ListingOptionsModal

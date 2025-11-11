@@ -22,6 +22,8 @@ app.use("/api/reports", require("./routes/reports"));
 app.use("/api/admin", require("./routes/admin"));
 app.use("/api/ratings", require("./routes/ratings"));
 app.use("/api/messages", require("./routes/messages"));
+app.use("/api/pricing", require("./routes/pricing"));
+app.use("/api/categories", require("./routes/categories"));
 
 const PORT = process.env.PORT || 5000;
 const httpServer = createServer(app);

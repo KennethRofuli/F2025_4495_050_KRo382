@@ -122,9 +122,11 @@ const MessagesModal = ({ visible, onClose }) => {
       <TouchableOpacity
         style={[
           styles.conversationItem,
-          hasUnread && styles.unreadConversation
+          hasUnread && styles.unreadConversation,
+          !conversation.listing && styles.disabledConversation
         ]}
-        onPress={() => openConversation(conversation)}
+        onPress={conversation.listing ? () => openConversation(conversation) : null}
+        disabled={!conversation.listing}
       >
         <View style={styles.avatarContainer}>
           <View style={styles.avatar}>
@@ -149,9 +151,13 @@ const MessagesModal = ({ visible, onClose }) => {
           </View>
           
           {/* Show listing context if available */}
-          {conversation.listing && (
+          {conversation.listing ? (
             <Text style={styles.listingContext}>
               About: {conversation.listing.title}
+            </Text>
+          ) : (
+            <Text style={styles.noListingContext}>
+              Listing no longer available
             </Text>
           )}
           
@@ -380,6 +386,15 @@ const styles = {
     color: '#fff',
     fontSize: 12,
     fontWeight: '600',
+  },
+  disabledConversation: {
+    opacity: 0.5,
+  },
+  noListingContext: {
+    fontSize: 12,
+    color: '#999',
+    fontStyle: 'italic',
+    marginBottom: 2,
   },
 };
 

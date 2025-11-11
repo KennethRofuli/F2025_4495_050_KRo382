@@ -29,7 +29,6 @@ const MyListingsScreen = ({ navigation }) => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-  const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isOptionsModalVisible, setIsOptionsModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -89,26 +88,14 @@ const MyListingsScreen = ({ navigation }) => {
   };
 
   const handleAddListing = () => {
-    setIsMenuVisible(false);
     setIsAddModalVisible(true);
   };
 
-  const handleMenuPress = () => {
-    setIsMenuVisible(!isMenuVisible);
-  };
-
-  const handleDashboard = () => {
-    setIsMenuVisible(false);
-    navigation.navigate('Dashboard');
-  };
-
-  const handleFavorites = () => {
-    setIsMenuVisible(false);
-    navigation.navigate('Favorites');
+  const handleBack = () => {
+    navigation.goBack();
   };
 
   const handleProfile = () => {
-    setIsMenuVisible(false);
     navigation.navigate('Profile');
   };
 
@@ -266,12 +253,12 @@ const MyListingsScreen = ({ navigation }) => {
     <SafeAreaView style={dashboardStyles.container}>
       {/* Header */}
       <View style={dashboardStyles.header}>
-        <TouchableOpacity onPress={handleMenuPress} style={dashboardStyles.menuButton}>
-          <Text style={{ color: '#fff', fontSize: 18 }}>☰</Text>
+        <TouchableOpacity onPress={handleBack} style={dashboardStyles.menuButton}>
+          <Text style={{ color: '#fff', fontSize: 16 }}>← Back</Text>
         </TouchableOpacity>
         <Text style={dashboardStyles.headerTitle}>📝 My Listings</Text>
-        <TouchableOpacity onPress={handleLogout}>
-          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>Logout</Text>
+        <TouchableOpacity onPress={handleAddListing}>
+          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>+ Add</Text>
         </TouchableOpacity>
       </View>
 
@@ -340,49 +327,6 @@ const MyListingsScreen = ({ navigation }) => {
         onListingUpdated={handleListingUpdated}
       />
 
-      {/* Menu Modal */}
-      <Modal
-        visible={isMenuVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setIsMenuVisible(false)}
-      >
-        <TouchableOpacity 
-          style={dashboardStyles.modalOverlay} 
-          activeOpacity={1} 
-          onPress={() => setIsMenuVisible(false)}
-        >
-          <View style={dashboardStyles.modalContent}>
-            <TouchableOpacity 
-              style={[dashboardStyles.modalItem, { borderBottomWidth: 1, borderBottomColor: '#ecf0f1' }]} 
-              onPress={handleAddListing}
-            >
-              <Text style={dashboardStyles.modalItemText}>➕ Add Listing</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[dashboardStyles.modalItem, { borderBottomWidth: 1, borderBottomColor: '#ecf0f1' }]} 
-              onPress={handleDashboard}
-            >
-              <Text style={dashboardStyles.modalItemText}>🏠 Dashboard</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[dashboardStyles.modalItem, { borderBottomWidth: 1, borderBottomColor: '#ecf0f1' }]} 
-              onPress={handleFavorites}
-            >
-              <Text style={dashboardStyles.modalItemText}>❤️ Favorites</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={dashboardStyles.modalItem} 
-              onPress={handleProfile}
-            >
-              <Text style={dashboardStyles.modalItemText}>👤 Profile</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
       {/* Listing Options Modal */}
       <ListingOptionsModal
         visible={isOptionsModalVisible}
@@ -390,6 +334,7 @@ const MyListingsScreen = ({ navigation }) => {
         listing={selectedListing}
         currentUserId={currentUserId}
         onListingUpdated={loadMyListings}
+        onEditListing={handleEditListing}
       />
 
       {/* Floating Message Button */}

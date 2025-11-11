@@ -64,7 +64,14 @@ router.get('/conversation/:userId/:listingId', auth, async (req, res) => {
     const messages = await Message.find(query)
       .populate('sender', 'name')
       .populate('receiver', 'name')
-      .populate('listing', 'title price image')
+      .populate({
+        path: 'listing',
+        select: 'title price image seller',
+        populate: {
+          path: 'seller',
+          select: 'name'
+        }
+      })
       .sort({ createdAt: 1 }) // Oldest first for chat
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -100,7 +107,14 @@ router.get('/conversation/:userId', auth, async (req, res) => {
     })
     .populate('sender', 'name')
     .populate('receiver', 'name')
-    .populate('listing', 'title price image')
+    .populate({
+      path: 'listing',
+      select: 'title price image seller',
+      populate: {
+        path: 'seller',
+        select: 'name'
+      }
+    })
     .sort({ createdAt: 1 }) // Oldest first for chat
     .limit(limit * 1)
     .skip((page - 1) * limit);
@@ -135,7 +149,14 @@ router.get('/conversations-debug', auth, async (req, res) => {
     })
     .populate('sender', 'name')
     .populate('receiver', 'name')
-    .populate('listing', 'title')
+    .populate({
+      path: 'listing',
+      select: 'title seller',
+      populate: {
+        path: 'seller',
+        select: 'name'
+      }
+    })
     .sort({ createdAt: -1 });
     
     res.json({
@@ -166,7 +187,14 @@ router.get('/conversations', auth, async (req, res) => {
     })
     .populate('sender', 'name email')
     .populate('receiver', 'name email')
-    .populate('listing', 'title price image')
+    .populate({
+      path: 'listing',
+      select: 'title price image seller',
+      populate: {
+        path: 'seller',
+        select: 'name'
+      }
+    })
     .sort({ createdAt: -1 })
     .lean(); // Use lean() for faster queries
 

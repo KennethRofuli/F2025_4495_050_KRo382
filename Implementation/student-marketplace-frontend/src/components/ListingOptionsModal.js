@@ -12,7 +12,7 @@ import { listingOptionsModalStyles } from '../styles/ListingOptionsModalStyles';
 import { reportsAPI, listingsAPI, ratingAPI } from '../services/api';
 import MessagingModal from './MessagingModal';
 
-const ListingOptionsModal = ({ visible, onClose, listing, currentUserId, onListingUpdated }) => {
+const ListingOptionsModal = ({ visible, onClose, listing, currentUserId, onListingUpdated, onEditListing }) => {
   const isOwner = listing?.seller?._id === currentUserId;
   const [selectedRating, setSelectedRating] = useState(0);
   const [existingRating, setExistingRating] = useState(null);
@@ -67,8 +67,11 @@ const ListingOptionsModal = ({ visible, onClose, listing, currentUserId, onListi
 
   const handleEditListing = () => {
     onClose();
-    // TODO: Navigate to edit listing screen
-    Alert.alert('Edit Listing', 'Edit listing functionality coming soon!');
+    if (onEditListing) {
+      onEditListing(listing);
+    } else {
+      Alert.alert('Edit Listing', 'Edit listing functionality not available in this context.');
+    }
   };
 
   const handleDeleteListing = () => {

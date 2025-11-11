@@ -14,6 +14,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { listingsAPI } from '../services/api';
 import { addListingModalStyles } from '../styles/AddListingModalStyles';
+import AIPriceSuggestion from './AIPriceSuggestion';
 
 const AddListingModal = ({ visible, onClose, onListingAdded }) => {
   const [title, setTitle] = useState('');
@@ -314,6 +315,17 @@ const AddListingModal = ({ visible, onClose, onListingAdded }) => {
                   maxLength={50}
                 />
               </View>
+
+              {/* AI Price Suggestion */}
+              {title && category && (
+                <AIPriceSuggestion
+                  title={title}
+                  description={description}
+                  category={category}
+                  condition="Good" // Default condition for now
+                  onPriceSelect={setPrice}
+                />
+              )}
 
               <View style={addListingModalStyles.imageSection}>
                 <Text style={addListingModalStyles.label}>Photo (Optional)</Text>

@@ -165,10 +165,17 @@ export const dashboardStyles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  priceSection: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+  },
   listingPrice: {
     fontSize: typography.xl,
     fontWeight: typography.bold,
     color: colors.success,
+  },
+  dealBadge: {
+    marginTop: spacing.xs,
   },
   listingMeta: {
     alignItems: 'flex-end',

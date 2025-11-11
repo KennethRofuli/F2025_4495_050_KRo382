@@ -728,4 +728,106 @@ export const messagingAPI = {
   },
 };
 
+// AI Pricing Intelligence API
+export const pricingAPI = {
+  // Get AI price suggestion for new listing
+  async getPriceSuggestion(itemData) {
+    try {
+      const response = await api.post('/pricing/suggestion', itemData);
+      return {
+        success: true,
+        data: response.data.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to get price suggestion',
+      };
+    }
+  },
+
+  // Get market statistics for category
+  async getMarketStats(category) {
+    try {
+      const response = await api.get(`/pricing/market-stats/${category}`);
+      return {
+        success: true,
+        data: response.data.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to get market stats',
+      };
+    }
+  },
+
+  // Get deal score for specific listing
+  async getDealScore(listingId) {
+    try {
+      const response = await api.get(`/pricing/deal-score/${listingId}`);
+      return {
+        success: true,
+        data: response.data.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to get deal score',
+      };
+    }
+  },
+
+  // Get market overview
+  async getMarketOverview() {
+    try {
+      const response = await api.get('/pricing/overview');
+      return {
+        success: true,
+        data: response.data.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to get market overview',
+      };
+    }
+  },
+};
+
+// Categories API
+export const categoriesAPI = {
+  // Get all categories with listing counts and AI config
+  async getCategories() {
+    try {
+      const response = await api.get('/categories');
+      return {
+        success: true,
+        data: response.data.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to get categories',
+      };
+    }
+  },
+
+  // Get specific category by name
+  async getCategory(name) {
+    try {
+      const response = await api.get(`/categories/${encodeURIComponent(name)}`);
+      return {
+        success: true,
+        data: response.data.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to get category',
+      };
+    }
+  },
+};
+
 export default api;

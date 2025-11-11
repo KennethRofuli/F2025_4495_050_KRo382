@@ -12,6 +12,7 @@ import FavoritesScreen from './src/screens/FavoritesScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import MessagesScreen from './src/screens/MessagesScreen';
 import UserProfileScreen from './src/screens/UserProfileScreen';
+import MarketIntelligenceScreen from './src/screens/MarketIntelligenceScreen';
 
 const Stack = createStackNavigator();
 
@@ -102,6 +103,14 @@ export default function App() {
             component={UserProfileScreen}
             options={{ 
               title: 'User Profile',
+              headerShown: false
+            }}
+          />
+          <Stack.Screen 
+            name="MarketIntelligence" 
+            component={MarketIntelligenceScreen}
+            options={{ 
+              title: 'Market Intelligence',
               headerShown: false
             }}
           />

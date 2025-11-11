@@ -16,9 +16,11 @@ import { imageUtils } from '../utils/helpers';
 import AddListingModal from '../components/AddListingModal';
 import HeartIcon from '../components/HeartIcon';
 import { RatingBadge } from '../components/RatingDisplay';
+import DealScoreBadge from '../components/DealScoreBadge';
 import FloatingMessageButton from '../components/FloatingMessageButton';
 import MessagesModal from '../components/MessagesModal';
 import ListingOptionsModal from '../components/ListingOptionsModal';
+import EditListingModal from '../components/EditListingModal';
 import { dashboardStyles } from '../styles/DashboardStyles';
 
 const DashboardScreen = ({ navigation }) => {
@@ -29,6 +31,7 @@ const DashboardScreen = ({ navigation }) => {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isOptionsModalVisible, setIsOptionsModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -138,9 +141,28 @@ const DashboardScreen = ({ navigation }) => {
     navigation.navigate('AdminDashboard');
   };
 
+  const handleMarketIntelligence = () => {
+    setIsMenuVisible(false);
+    navigation.navigate('MarketIntelligence');
+  };
+
   const handleProfile = () => {
     setIsMenuVisible(false);
     navigation.navigate('Profile');
+  };
+
+  const handleEditListing = (listing) => {
+    setSelectedListing(listing);
+    setIsEditModalVisible(true);
+  };
+
+  const handleListingUpdated = (updatedListing) => {
+    const updatedListings = listings.map(listing =>
+      listing._id === updatedListing._id ? updatedListing : listing
+    );
+    setListings(updatedListings);
+    setFilteredListings(updatedListings);
+    setIsEditModalVisible(false);
   };
 
   const handleSearch = (query) => {
@@ -213,7 +235,15 @@ const DashboardScreen = ({ navigation }) => {
             {listing.description}
           </Text>
           <View style={dashboardStyles.listingFooter}>
-            <Text style={dashboardStyles.listingPrice}>{formatPrice(listing.price)}</Text>
+            <View style={dashboardStyles.priceSection}>
+              <Text style={dashboardStyles.listingPrice}>{formatPrice(listing.price)}</Text>
+              <DealScoreBadge 
+                listingId={listing._id}
+                price={listing.price}
+                category={listing.category}
+                style={dashboardStyles.dealBadge}
+              />
+            </View>
             <View style={dashboardStyles.listingMeta}>
               <Text style={dashboardStyles.listingCategory}>{listing.category}</Text>
               <Text style={dashboardStyles.listingDate}>
@@ -351,6 +381,13 @@ const DashboardScreen = ({ navigation }) => {
             </TouchableOpacity>
             
             <TouchableOpacity 
+              style={[dashboardStyles.modalItem, { borderBottomWidth: 1, borderBottomColor: '#ecf0f1' }]} 
+              onPress={handleMarketIntelligence}
+            >
+              <Text style={dashboardStyles.modalItemText}>🤖 Market Intelligence</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
               style={dashboardStyles.modalItem} 
               onPress={handleProfile}
             >
@@ -367,6 +404,15 @@ const DashboardScreen = ({ navigation }) => {
         listing={selectedListing}
         currentUserId={currentUserId}
         onListingUpdated={loadListings}
+        onEditListing={handleEditListing}
+      />
+
+      {/* Edit Listing Modal */}
+      <EditListingModal
+        visible={isEditModalVisible}
+        onClose={() => setIsEditModalVisible(false)}
+        listing={selectedListing}
+        onListingUpdated={handleListingUpdated}
       />
 
       {/* Floating Message Button */}
