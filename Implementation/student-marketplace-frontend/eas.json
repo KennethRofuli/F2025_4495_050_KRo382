@@ -1,0 +1,28 @@
+{
+  "cli": {
+    "version": ">= 16.26.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development"
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview"
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production"
+    },
+    "expo-go": {
+      "distribution": "internal",
+      "channel": "expo-go"
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

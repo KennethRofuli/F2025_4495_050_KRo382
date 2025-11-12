@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { messagingAPI, authAPI } from '../services/api';
+import socketService from '../services/socketService';
 import MessagingModal from '../components/MessagingModal';
 
 const MessagesScreen = ({ navigation }) => {
@@ -23,7 +24,42 @@ const MessagesScreen = ({ navigation }) => {
 
   useEffect(() => {
     initializeScreen();
+    
+    // Connect socket when screen mounts
+    connectSocket();
+    
+    // Cleanup when component unmounts
+    return () => {
+      socketService.removeAllListeners();
+    };
   }, []);
+
+  const connectSocket = async () => {
+    try {
+      const connected = await socketService.connect();
+      if (connected) {
+        console.log('✅ Socket connected in MessagesScreen');
+        
+        // Listen for new messages
+        socketService.onMessage((message, status, error) => {
+          if (status === 'error') {
+            console.error('Socket message error:', error);
+            return;
+          }
+          
+          if (message) {
+            console.log('📨 New message received in MessagesScreen:', message);
+            // Update conversations when new message arrives
+            loadConversations();
+          }
+        });
+      } else {
+        console.log('❌ Socket connection failed in MessagesScreen');
+      }
+    } catch (error) {
+      console.error('Socket connection error:', error);
+    }
+  };
 
   const initializeScreen = async () => {
     const userId = await authAPI.getCurrentUserId();

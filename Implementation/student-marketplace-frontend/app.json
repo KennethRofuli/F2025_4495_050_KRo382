@@ -26,10 +26,16 @@
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
-      ]
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.kenrofuli.studentmarketplacefrontend"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -42,6 +48,17 @@
           "cameraPermission": "The app accesses your camera to let you take photos for your listings."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "2c27a6b6-1cdf-4c26-8a6c-91df8c7e64d8"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/2c27a6b6-1cdf-4c26-8a6c-91df8c7e64d8"
+    }
   }
 }

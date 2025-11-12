@@ -60,8 +60,65 @@ const io = new Server(httpServer, {
   io.on("connection", (socket) => {
     console.log("⚡ New client connected:", socket.id);
 
-    socket.on("sendMessage", (msg) => {
-      socket.broadcast.emit("receiveMessage", msg);
+    // Join user to their personal room
+    socket.on("join", (userId) => {
+      socket.join(`user_${userId}`);
+      console.log(`👤 User ${userId} joined room user_${userId}`);
+    });
+
+    // Handle real-time message sending
+    socket.on("sendMessage", async (messageData) => {
+      try {
+        console.log("📤 Sending message:", messageData);
+        
+        // Import message model here to avoid circular dependency
+        const Message = require('./models/Message');
+        
+        // Create and save the message to database
+        const newMessage = new Message({
+          sender: messageData.senderId,
+          receiver: messageData.receiverId,
+          content: messageData.content,
+          listing: messageData.listingId || null,
+          createdAt: new Date()
+        });
+        
+        const savedMessage = await newMessage.save();
+        await savedMessage.populate(['sender', 'receiver', 'listing']);
+        
+        // Emit to receiver's room for real-time delivery
+        io.to(`user_${messageData.receiverId}`).emit("newMessage", {
+          ...savedMessage.toObject(),
+          _id: savedMessage._id.toString()
+        });
+        
+        // Confirm delivery to sender
+        socket.emit("messageDelivered", {
+          ...savedMessage.toObject(),
+          _id: savedMessage._id.toString()
+        });
+        
+        console.log(`✅ Message delivered from ${messageData.senderId} to ${messageData.receiverId}`);
+      } catch (error) {
+        console.error("❌ Error sending message:", error);
+        socket.emit("messageError", { error: error.message });
+      }
+    });
+
+    // Handle typing indicators
+    socket.on("typing", (data) => {
+      socket.to(`user_${data.receiverId}`).emit("userTyping", {
+        senderId: data.senderId,
+        isTyping: data.isTyping
+      });
+    });
+
+    // Handle user going online/offline
+    socket.on("userOnline", (userId) => {
+      socket.broadcast.emit("userStatusChanged", {
+        userId: userId,
+        isOnline: true
+      });
     });
 
     socket.on("disconnect", () => {

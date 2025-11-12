@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Modal,
   View,
@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { messagingAPI } from '../services/api';
+import socketService from '../services/socketService';
 
 const MessagingModal = ({ 
   visible, 
@@ -23,12 +24,78 @@ const MessagingModal = ({
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [otherUserTyping, setOtherUserTyping] = useState(false);
+  const flatListRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (visible && receiverId) {
       loadMessages();
+      setupSocketListeners();
     }
+    
+    return () => {
+      cleanupSocketListeners();
+    };
   }, [visible, receiverId]);
+
+  const setupSocketListeners = () => {
+    // Listen for new messages
+    const unsubscribeMessages = socketService.onMessage((message, status, error) => {
+      if (status === 'error') {
+        console.error('Socket message error:', error);
+        return;
+      }
+      
+      if (message) {
+        console.log('📨 New message received in modal:', message);
+        
+        // Check if this message is for the current conversation
+        const isForThisConversation = 
+          (message.sender._id === receiverId && message.receiver._id === currentUserId) ||
+          (message.sender._id === currentUserId && message.receiver._id === receiverId);
+        
+        const isForThisListing = !listing?._id || message.listing?._id === listing._id;
+        
+        if (isForThisConversation && isForThisListing) {
+          setMessages(prev => {
+            // Avoid duplicates
+            const exists = prev.some(msg => msg._id === message._id);
+            if (!exists) {
+              return [...prev, message];
+            }
+            return prev;
+          });
+          
+          // Scroll to bottom
+          setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: true });
+          }, 100);
+        }
+      }
+    });
+
+    // Listen for typing indicators
+    const unsubscribeTyping = socketService.onTyping((data) => {
+      if (data.senderId === receiverId) {
+        setOtherUserTyping(data.isTyping);
+      }
+    });
+
+    // Return cleanup functions
+    return () => {
+      unsubscribeMessages();
+      unsubscribeTyping();
+    };
+  };
+
+  const cleanupSocketListeners = () => {
+    // Clear typing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+  };
 
   const loadMessages = async (showLoading = true) => {
     // Prevent multiple concurrent calls
@@ -73,26 +140,64 @@ const MessagingModal = ({
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
 
+    const messageContent = newMessage.trim();
+    setNewMessage(''); // Clear input immediately for better UX
+
     try {
       const result = await messagingAPI.sendMessage(
         receiverId, 
-        newMessage.trim(), 
+        messageContent, 
         listing._id
       );
       
       if (result.success) {
-        // Add message to local state
-        const sentMessage = result.data.message;
-        setMessages(prev => [...prev, sentMessage]);
-        setNewMessage('');
+        // If sent via socket, the message will be added via socket listener
+        // If sent via API, add to local state
+        if (result.method === 'api') {
+          const sentMessage = result.data.message || result.data;
+          setMessages(prev => [...prev, sentMessage]);
+        }
+        
+        // Scroll to bottom
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
       } else {
         Alert.alert('Error', result.error);
+        // Restore message text on error
+        setNewMessage(messageContent);
       }
       
     } catch (error) {
       console.error('Send message error:', error);
       Alert.alert('Error', 'Failed to send message');
+      // Restore message text on error
+      setNewMessage(messageContent);
     }
+  };
+
+  const handleMessageChange = (text) => {
+    setNewMessage(text);
+    
+    // Send typing indicators
+    if (text.length > 0 && !isTyping) {
+      setIsTyping(true);
+      socketService.sendTyping(receiverId, true);
+    } else if (text.length === 0 && isTyping) {
+      setIsTyping(false);
+      socketService.sendTyping(receiverId, false);
+    }
+    
+    // Clear previous timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    // Set timeout to stop typing indicator
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false);
+      socketService.sendTyping(receiverId, false);
+    }, 1000);
   };
 
   const renderMessage = ({ item }) => {
@@ -169,12 +274,23 @@ const MessagingModal = ({
             </View>
           ) : (
             <FlatList
+              ref={flatListRef}
               data={messages}
               renderItem={renderMessage}
               keyExtractor={(item) => item._id}
               style={styles.messagesList}
               showsVerticalScrollIndicator={false}
+              onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
             />
+          )}
+          
+          {/* Typing Indicator */}
+          {otherUserTyping && (
+            <View style={styles.typingContainer}>
+              <Text style={styles.typingText}>
+                {listing.seller?.name || 'User'} is typing...
+              </Text>
+            </View>
           )}
         </View>
 
@@ -183,7 +299,7 @@ const MessagingModal = ({
           <TextInput
             style={styles.textInput}
             value={newMessage}
-            onChangeText={setNewMessage}
+            onChangeText={handleMessageChange}
             placeholder="Type a message..."
             multiline
             maxHeight={100}
@@ -346,6 +462,15 @@ const styles = {
   },
   sendButtonDisabled: {
     backgroundColor: '#e0e0e0',
+  },
+  typingContainer: {
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+  },
+  typingText: {
+    fontSize: 14,
+    color: '#999',
+    fontStyle: 'italic',
   },
   unavailableCard: {
     backgroundColor: '#f5f5f5',
