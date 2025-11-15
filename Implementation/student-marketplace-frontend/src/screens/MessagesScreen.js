@@ -11,8 +11,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { messagingAPI, authAPI } from '../services/api';
-import socketService from '../services/socketService';
+import realTimeService from '../services/realTimeService';
 import MessagingModal from '../components/MessagingModal';
+import { useFocusEffect } from '@react-navigation/native';
 
 const MessagesScreen = ({ navigation }) => {
   const [conversations, setConversations] = useState([]);
@@ -24,41 +25,37 @@ const MessagesScreen = ({ navigation }) => {
 
   useEffect(() => {
     initializeScreen();
-    
-    // Connect socket when screen mounts
-    connectSocket();
-    
-    // Cleanup when component unmounts
-    return () => {
-      socketService.removeAllListeners();
-    };
   }, []);
 
-  const connectSocket = async () => {
-    try {
-      const connected = await socketService.connect();
-      if (connected) {
-        console.log('✅ Socket connected in MessagesScreen');
-        
-        // Listen for new messages
-        socketService.onMessage((message, status, error) => {
-          if (status === 'error') {
-            console.error('Socket message error:', error);
-            return;
-          }
-          
-          if (message) {
-            console.log('📨 New message received in MessagesScreen:', message);
-            // Update conversations when new message arrives
-            loadConversations();
-          }
-        });
-      } else {
-        console.log('❌ Socket connection failed in MessagesScreen');
+  // Use focus effect to properly manage real-time service
+  useFocusEffect(
+    React.useCallback(() => {
+      // Screen is focused - start real-time service
+      connectRealTime();
+      
+      return () => {
+        // Screen is unfocused - stop real-time service
+        console.log('📱 MessagesScreen unfocused, stopping real-time service');
+        realTimeService.stopPolling();
+        realTimeService.removeAllListeners();
+      };
+    }, [])
+  );
+
+  const connectRealTime = async () => {
+    console.log('🔄 Starting real-time messaging service');
+    
+    // Start polling for new messages (with authentication check)
+    await realTimeService.startPolling(3000); // Check every 3 seconds
+    
+    // Listen for new messages
+    realTimeService.onMessage((message, status) => {
+      if (status === 'new') {
+        console.log('📨 New message detected in MessagesScreen:', message);
+        // Refresh conversations when new message arrives
+        loadConversations();
       }
-    } catch (error) {
-      console.error('Socket connection error:', error);
-    }
+    });
   };
 
   const initializeScreen = async () => {

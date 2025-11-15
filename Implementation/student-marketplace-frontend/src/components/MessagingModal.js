@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { messagingAPI } from '../services/api';
-import socketService from '../services/socketService';
+import realTimeService from '../services/realTimeService';
 
 const MessagingModal = ({ 
   visible, 
@@ -24,77 +24,40 @@ const MessagingModal = ({
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
-  const [otherUserTyping, setOtherUserTyping] = useState(false);
   const flatListRef = useRef(null);
-  const typingTimeoutRef = useRef(null);
+  const lastMessageCount = useRef(0);
+  const pollingIntervalRef = useRef(null);
 
   useEffect(() => {
     if (visible && receiverId) {
       loadMessages();
-      setupSocketListeners();
+      setupRealTimePolling();
     }
     
     return () => {
-      cleanupSocketListeners();
+      // Clean up polling interval when component unmounts or modal closes
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
     };
   }, [visible, receiverId]);
 
-  const setupSocketListeners = () => {
-    // Listen for new messages
-    const unsubscribeMessages = socketService.onMessage((message, status, error) => {
-      if (status === 'error') {
-        console.error('Socket message error:', error);
-        return;
-      }
-      
-      if (message) {
-        console.log('📨 New message received in modal:', message);
-        
-        // Check if this message is for the current conversation
-        const isForThisConversation = 
-          (message.sender._id === receiverId && message.receiver._id === currentUserId) ||
-          (message.sender._id === currentUserId && message.receiver._id === receiverId);
-        
-        const isForThisListing = !listing?._id || message.listing?._id === listing._id;
-        
-        if (isForThisConversation && isForThisListing) {
-          setMessages(prev => {
-            // Avoid duplicates
-            const exists = prev.some(msg => msg._id === message._id);
-            if (!exists) {
-              return [...prev, message];
-            }
-            return prev;
-          });
-          
-          // Scroll to bottom
-          setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: true });
-          }, 100);
-        }
-      }
-    });
-
-    // Listen for typing indicators
-    const unsubscribeTyping = socketService.onTyping((data) => {
-      if (data.senderId === receiverId) {
-        setOtherUserTyping(data.isTyping);
-      }
-    });
-
-    // Return cleanup functions
-    return () => {
-      unsubscribeMessages();
-      unsubscribeTyping();
-    };
-  };
-
-  const cleanupSocketListeners = () => {
-    // Clear typing timeout
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
+  const setupRealTimePolling = () => {
+    // Clear any existing interval first
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
     }
+    
+    // Store initial message count
+    lastMessageCount.current = messages.length;
+    
+    // Set up a focused polling for this conversation
+    pollingIntervalRef.current = setInterval(async () => {
+      if (visible) {
+        await loadMessages(false); // Load without showing loading spinner
+      }
+    }, 2000); // Check every 2 seconds for this conversation
   };
 
   const loadMessages = async (showLoading = true) => {
@@ -108,7 +71,19 @@ const MessagingModal = ({
       
       const result = await messagingAPI.getConversation(receiverId, listing?._id);
       if (result.success) {
-        setMessages(result.data.messages || []);
+        const newMessages = result.data.messages || [];
+        
+        // Check if we have new messages
+        if (newMessages.length > lastMessageCount.current) {
+          console.log('📨 New messages detected in conversation');
+          // Auto-scroll to bottom for new messages
+          setTimeout(() => {
+            flatListRef.current?.scrollToEnd({ animated: true });
+          }, 100);
+        }
+        
+        setMessages(newMessages);
+        lastMessageCount.current = newMessages.length;
         
         // Mark messages as read after loading (don't wait for completion)
         markMessagesAsRead();
@@ -144,19 +119,17 @@ const MessagingModal = ({
     setNewMessage(''); // Clear input immediately for better UX
 
     try {
-      const result = await messagingAPI.sendMessage(
+      const result = await realTimeService.sendMessage(
         receiverId, 
         messageContent, 
         listing._id
       );
       
       if (result.success) {
-        // If sent via socket, the message will be added via socket listener
-        // If sent via API, add to local state
-        if (result.method === 'api') {
-          const sentMessage = result.data.message || result.data;
-          setMessages(prev => [...prev, sentMessage]);
-        }
+        console.log('✅ Message sent successfully');
+        const sentMessage = result.data.message || result.data;
+        setMessages(prev => [...prev, sentMessage]);
+        lastMessageCount.current += 1;
         
         // Scroll to bottom
         setTimeout(() => {
@@ -174,30 +147,6 @@ const MessagingModal = ({
       // Restore message text on error
       setNewMessage(messageContent);
     }
-  };
-
-  const handleMessageChange = (text) => {
-    setNewMessage(text);
-    
-    // Send typing indicators
-    if (text.length > 0 && !isTyping) {
-      setIsTyping(true);
-      socketService.sendTyping(receiverId, true);
-    } else if (text.length === 0 && isTyping) {
-      setIsTyping(false);
-      socketService.sendTyping(receiverId, false);
-    }
-    
-    // Clear previous timeout
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-    
-    // Set timeout to stop typing indicator
-    typingTimeoutRef.current = setTimeout(() => {
-      setIsTyping(false);
-      socketService.sendTyping(receiverId, false);
-    }, 1000);
   };
 
   const renderMessage = ({ item }) => {
@@ -283,15 +232,6 @@ const MessagingModal = ({
               onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
             />
           )}
-          
-          {/* Typing Indicator */}
-          {otherUserTyping && (
-            <View style={styles.typingContainer}>
-              <Text style={styles.typingText}>
-                {listing.seller?.name || 'User'} is typing...
-              </Text>
-            </View>
-          )}
         </View>
 
         {/* Message Input */}
@@ -299,7 +239,7 @@ const MessagingModal = ({
           <TextInput
             style={styles.textInput}
             value={newMessage}
-            onChangeText={handleMessageChange}
+            onChangeText={setNewMessage}
             placeholder="Type a message..."
             multiline
             maxHeight={100}

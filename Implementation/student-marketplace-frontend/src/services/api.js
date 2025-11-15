@@ -3,8 +3,8 @@ import * as SecureStore from 'expo-secure-store';
 
 // Base URL for your backend API
 // Using cloud backend for international peer testing (no WiFi dependency)
-const BASE_URL = 'http://10.0.0.26:5000/api';
-//const BASE_URL = 'https://studentmartketplace-backend.onrender.com/api';
+//const BASE_URL = 'http://10.0.0.26:5000/api';
+const BASE_URL = 'https://studentmartketplace-backend.onrender.com/api';
 
 // Create axios instance
 const api = axios.create({
@@ -649,35 +649,9 @@ export const ratingAPI = {
 
 // Messaging API methods
 export const messagingAPI = {
-  // Send a message (now with Socket.IO integration)
+  // Send a message via REST API (now using HTTP polling for real-time updates)
   async sendMessage(receiverId, content, listingId = null) {
     try {
-      // Try to send via socket first for real-time delivery
-      const socketService = require('./socketService').default;
-      
-      if (socketService.isSocketConnected()) {
-        // Send via socket for real-time delivery
-        const socketSent = socketService.sendMessage(receiverId, content, listingId);
-        
-        if (socketSent) {
-          // Socket sent successfully, return immediately
-          // The actual message saving is handled by the socket server
-          return {
-            success: true,
-            data: {
-              receiver: receiverId,
-              content,
-              listing: listingId,
-              createdAt: new Date().toISOString(),
-              _id: 'pending', // Temporary ID until server confirms
-            },
-            method: 'socket'
-          };
-        }
-      }
-      
-      // Fallback to REST API if socket fails or not connected
-      console.log('Falling back to REST API for message sending');
       const response = await api.post('/messages/send', {
         receiverId,
         content,

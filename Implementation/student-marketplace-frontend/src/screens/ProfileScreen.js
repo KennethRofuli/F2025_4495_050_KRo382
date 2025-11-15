@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { UserRatingDisplay } from '../components/RatingDisplay';
 import { ratingAPI, authAPI, tokenManager } from '../services/api';
+import realTimeService from '../services/realTimeService';
 
 const ProfileScreen = ({ navigation }) => {
   const [userInfo, setUserInfo] = useState({
@@ -150,7 +151,12 @@ const ProfileScreen = ({ navigation }) => {
           style: 'destructive',
           onPress: async () => {
             try {
+              // Stop real-time service
+              realTimeService.stopAfterLogout();
+              
+              // Remove token
               await tokenManager.removeToken();
+              
               // Navigate to login screen
               navigation.reset({
                 index: 0,

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { authAPI } from '../services/api';
+import realTimeService from '../services/realTimeService';
 import { authStyles } from '../styles/AuthStyles';
 
 const LoginScreen = ({ navigation }) => {
@@ -31,6 +32,9 @@ const LoginScreen = ({ navigation }) => {
       
       if (result.success) {
         console.log('✅ User logged in:', result.data.user);
+        
+        // Start real-time service after successful login
+        await realTimeService.startAfterLogin();
         
         // Check if user is admin and redirect accordingly
         if (result.data.user.role === 'admin') {

@@ -28,16 +28,21 @@ class SocketService {
 
       // Connect to socket server
       // For production: 
-      // const SOCKET_URL = 'https://studentmartketplace-backend.onrender.com';
+      const SOCKET_URL = 'https://studentmartketplace-backend.onrender.com';
       // For local development:
-      const SOCKET_URL = 'http://10.0.0.26:5000';
+      //const SOCKET_URL = 'http://10.0.0.26:5000';
+      
+      console.log('🔄 Attempting to connect to Socket.IO server:', SOCKET_URL);
+      console.log('👤 User ID:', this.userId);
       
       this.socket = io(SOCKET_URL, {
-        auth: { token },
+        // Temporarily remove auth to test basic connection
+        // auth: { token },
         reconnection: true,
-        reconnectionDelay: 1000,
-        reconnectionAttempts: 5,
-        timeout: 20000,
+        reconnectionDelay: 2000,
+        reconnectionAttempts: 3,
+        timeout: 10000,
+        forceNew: true
       });
 
       // Set up event listeners
@@ -59,9 +64,19 @@ class SocketService {
 
         this.socket.on('connect_error', (error) => {
           console.error('🔴 Socket connection error:', error);
+          console.error('Error details:', error.message);
+          console.error('Error type:', error.type);
           this.isConnected = false;
           resolve(false);
         });
+
+        // Add timeout for connection
+        setTimeout(() => {
+          if (!this.isConnected) {
+            console.error('⏰ Socket connection timeout after 20 seconds');
+            resolve(false);
+          }
+        }, 20000);
       });
     } catch (error) {
       console.error('Socket connection failed:', error);
@@ -118,8 +133,14 @@ class SocketService {
 
   // Send a message via socket
   sendMessage(receiverId, content, listingId = null) {
+    console.log('🔍 Checking socket connection...');
+    console.log('Socket exists:', !!this.socket);
+    console.log('Is connected:', this.isConnected);
+    
     if (!this.socket || !this.isConnected) {
-      console.error('Socket not connected, cannot send message');
+      console.error('❌ Socket not connected, cannot send message');
+      console.error('Socket:', this.socket ? 'exists' : 'null');
+      console.error('Connected:', this.isConnected);
       return false;
     }
 

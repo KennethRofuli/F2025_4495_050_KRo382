@@ -28,33 +28,42 @@ app.use("/api/categories", require("./routes/categories"));
 const PORT = process.env.PORT || 5000;
 const httpServer = createServer(app);
 
-// Socket.IO + Redis
+// Socket.IO setup
 const io = new Server(httpServer, {
-  cors: { origin: "*" }
+  cors: { 
+    origin: "*",
+    methods: ["GET", "POST"]
+  },
+  transports: ['websocket', 'polling']
 });
 
+// Optional Redis setup (only if REDIS_URL is provided)
 (async () => {
-  try {
-    const pubClient = createClient({ url: process.env.REDIS_URL });
-    const subClient = pubClient.duplicate();
+  if (process.env.REDIS_URL) {
+    try {
+      const pubClient = createClient({ url: process.env.REDIS_URL });
+      const subClient = pubClient.duplicate();
 
-    // Add error handlers to prevent warnings
-    pubClient.on('error', (err) => {
-      console.log('Redis pubClient error:', err.message);
-    });
-    
-    subClient.on('error', (err) => {
-      console.log('Redis subClient error:', err.message);
-    });
+      // Add error handlers to prevent warnings
+      pubClient.on('error', (err) => {
+        console.log('Redis pubClient error:', err.message);
+      });
+      
+      subClient.on('error', (err) => {
+        console.log('Redis subClient error:', err.message);
+      });
 
-    await pubClient.connect();
-    await subClient.connect();
+      await pubClient.connect();
+      await subClient.connect();
 
-    io.adapter(createAdapter(pubClient, subClient));
-    console.log('✅ Redis connected successfully');
-  } catch (error) {
-    console.log('⚠️ Redis connection failed, using memory adapter:', error.message);
-    // Socket.IO will use memory adapter by default
+      io.adapter(createAdapter(pubClient, subClient));
+      console.log('✅ Redis connected successfully');
+    } catch (error) {
+      console.log('⚠️ Redis connection failed, using memory adapter:', error.message);
+      // Socket.IO will use memory adapter by default
+    }
+  } else {
+    console.log('💾 No Redis URL provided, using memory adapter');
   }
 
   io.on("connection", (socket) => {
@@ -126,5 +135,9 @@ const io = new Server(httpServer, {
     });
   });
 
-  httpServer.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+  httpServer.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`⚡ Socket.IO server ready and listening`);
+    console.log(`🌐 CORS enabled for all origins`);
+  });
 })();
