@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true },
   campus: { type: String, required: true },
   avatar: { type: String },
+  needsPasswordChange: { type: Boolean, default: false }, // Flag for required password changes
   favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Listing' }],
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
   isActive: { type: Boolean, default: true },

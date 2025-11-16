@@ -5,6 +5,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
+import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
+import PasswordResetScreen from './src/screens/PasswordResetScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import AdminDashboardScreen from './src/screens/AdminDashboardScreen';
 import MyListingsScreen from './src/screens/MyListingsScreen';
@@ -45,6 +47,22 @@ export default function App() {
             component={RegisterScreen}
             options={{ 
               title: 'Create Account',
+              headerShown: false 
+            }}
+          />
+          <Stack.Screen 
+            name="ForgotPassword" 
+            component={ForgotPasswordScreen}
+            options={{ 
+              title: 'Reset Password',
+              headerShown: false 
+            }}
+          />
+          <Stack.Screen 
+            name="PasswordReset" 
+            component={PasswordResetScreen}
+            options={{ 
+              title: 'Create New Password',
               headerShown: false 
             }}
           />

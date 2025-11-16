@@ -62,6 +62,18 @@ export const authStyles = StyleSheet.create({
     borderWidth: 2,
   },
   
+  // Forgot Password section
+  forgotPasswordContainer: {
+    alignItems: 'flex-end',
+    marginBottom: spacing.lg,
+    marginTop: -spacing.md,
+  },
+  forgotPasswordText: {
+    fontSize: typography.sm,
+    color: colors.primary,
+    fontWeight: typography.medium,
+  },
+  
   // Button section
   buttonContainer: {
     marginBottom: spacing.xxxl,

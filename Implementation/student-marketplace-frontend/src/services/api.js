@@ -3,8 +3,8 @@ import * as SecureStore from 'expo-secure-store';
 
 // Base URL for your backend API
 // Using cloud backend for international peer testing (no WiFi dependency)
-//const BASE_URL = 'http://10.0.0.26:5000/api';
-const BASE_URL = 'https://studentmartketplace-backend.onrender.com/api';
+const BASE_URL = 'http://10.0.0.26:5000/api';
+//const BASE_URL = 'https://studentmartketplace-backend.onrender.com/api';
 
 // Create axios instance
 const api = axios.create({
@@ -211,6 +211,8 @@ export const authAPI = {
       };
     }
   },
+
+  // Firebase sync method removed - no longer needed
 };
 
 // Listings API methods
@@ -829,6 +831,59 @@ export const categoriesAPI = {
       };
     }
   },
+};
+
+// Password Reset API (Nodemailer implementation)
+export const passwordResetAPI = {
+  async initiateReset(email) {
+    try {
+      const response = await api.post('/password-reset/initiate', { email });
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to send reset email',
+      };
+    }
+  },
+
+  async resetPassword(email, newPassword, confirmPassword) {
+    try {
+      const response = await api.post('/password-reset/reset-password', {
+        email,
+        newPassword,
+        confirmPassword
+      });
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to reset password',
+      };
+    }
+  },
+
+  // Debug user authentication status
+  async debugUserStatus(email) {
+    try {
+      const response = await api.post('/password-reset/debug-user', { email });
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to debug user status',
+      };
+    }
+  }
 };
 
 export default api;

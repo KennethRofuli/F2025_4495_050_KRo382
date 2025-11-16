@@ -49,7 +49,37 @@ const LoginScreen = ({ navigation }) => {
           });
         }
       } else {
-        Alert.alert('Error', result.error);
+        // Try automatic password sync before showing error
+        console.log('❌ Login failed, attempting password sync...');
+        try {
+          const syncResult = await authAPI.attemptPasswordSync(email);
+          if (syncResult.success && syncResult.synced) {
+            // Retry login after successful sync
+            console.log('✅ Password synced, retrying login...');
+            const retryResult = await authAPI.login(email, password);
+            if (retryResult.success) {
+              console.log('✅ Login successful after sync');
+              await realTimeService.startAfterLogin();
+              
+              if (retryResult.data.user.role === 'admin') {
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'AdminDashboard' }],
+                });
+              } else {
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: 'Dashboard' }],
+                });
+              }
+              return;
+            }
+          }
+        } catch (syncError) {
+          console.log('⚠️ Sync attempt failed:', syncError);
+        }
+        
+        Alert.alert('Error', 'Login failed invalid credentials');
       }
     } catch (error) {
       Alert.alert('Error', 'Network error. Please check your connection.');
@@ -95,8 +125,20 @@ const LoginScreen = ({ navigation }) => {
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
-                  autoCompleteType="password"
+                  autoCompleteType="off"
+                  textContentType="none"
+                  passwordRules=""
                 />
+              </View>
+
+              {/* Forgot Password Link */}
+              <View style={authStyles.forgotPasswordContainer}>
+                <TouchableOpacity 
+                  onPress={() => navigation.navigate('ForgotPassword')}
+                  disabled={isLoading}
+                >
+                  <Text style={authStyles.forgotPasswordText}>Forgot Password?</Text>
+                </TouchableOpacity>
               </View>
 
               <View style={authStyles.buttonContainer}>

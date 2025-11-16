@@ -7,6 +7,7 @@ import {
   RefreshControl,
   Alert,
   Image,
+  StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -46,7 +47,7 @@ const MessagesScreen = ({ navigation }) => {
     console.log('🔄 Starting real-time messaging service');
     
     // Start polling for new messages (with authentication check)
-    await realTimeService.startPolling(3000); // Check every 3 seconds
+    await realTimeService.startPolling(15000); // Check every 15 seconds
     
     // Listen for new messages
     realTimeService.onMessage((message, status) => {
@@ -202,43 +203,62 @@ const MessagesScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => navigation.goBack()} 
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Messages</Text>
-        <View style={styles.placeholder} />
-      </View>
+    <View style={styles.container}>
+      <SafeAreaView style={styles.safeAreaContainer}>
+        <StatusBar barStyle="light-content" backgroundColor="#007AFF" />
+        {/* Header - Always consistent */}
+        <View style={styles.header}>
+          <TouchableOpacity 
+            onPress={() => {
+              console.log('Back button pressed'); // Debug log
+              try {
+                if (navigation.canGoBack()) {
+                  navigation.goBack();
+                } else {
+                  navigation.navigate('Dashboard');
+                }
+              } catch (error) {
+                console.error('Navigation error:', error);
+                navigation.navigate('Dashboard');
+              }
+            }} 
+            style={styles.backButton}
+            activeOpacity={0.6}
+            hitSlop={{ top: 25, bottom: 25, left: 25, right: 25 }}
+          >
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Messages</Text>
+          <View style={styles.placeholder} />
+        </View>
 
-      {/* Conversations List */}
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading conversations...</Text>
+        {/* Content Area - Always uniform */}
+        <View style={styles.contentArea}>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Loading conversations...</Text>
+            </View>
+          ) : conversations.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Ionicons name="chatbubbles-outline" size={64} color="#ccc" />
+              <Text style={styles.emptyTitle}>No messages yet</Text>
+              <Text style={styles.emptySubtitle}>
+                Start a conversation by messaging a seller about their listing
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={conversations}
+              renderItem={renderConversation}
+              keyExtractor={(item) => item.user._id}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }
+              style={styles.conversationsList}
+            />
+          )}
         </View>
-      ) : conversations.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="chatbubbles-outline" size={64} color="#ccc" />
-          <Text style={styles.emptyTitle}>No messages yet</Text>
-          <Text style={styles.emptySubtitle}>
-            Start a conversation by messaging a seller about their listing
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={conversations}
-          renderItem={renderConversation}
-          keyExtractor={(item) => item.user._id}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          style={styles.conversationsList}
-        />
-      )}
+      </SafeAreaView>
 
       {/* Messaging Modal */}
       {selectedConversation && (
@@ -255,12 +275,16 @@ const MessagesScreen = ({ navigation }) => {
           receiverId={selectedConversation.receiverId}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = {
   container: {
+    flex: 1,
+    backgroundColor: '#007AFF',
+  },
+  safeAreaContainer: {
     flex: 1,
     backgroundColor: '#f8f9fa',
   },
@@ -268,12 +292,27 @@ const styles = {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#007AFF',
-    paddingHorizontal: 15,
-    paddingVertical: 15,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     justifyContent: 'space-between',
+    minHeight: 64,
+    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    zIndex: 1000,
   },
   backButton: {
-    padding: 5,
+    padding: 12,
+    minWidth: 48,
+    minHeight: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   headerTitle: {
     color: '#fff',
@@ -282,6 +321,9 @@ const styles = {
   },
   placeholder: {
     width: 34, // Same width as back button for centering
+  },
+  contentArea: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,

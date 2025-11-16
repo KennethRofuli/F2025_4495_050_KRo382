@@ -14,6 +14,9 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// Serve static files
+app.use('/public', express.static('public'));
+
 // Routes
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/listings", require("./routes/listings"));
@@ -24,6 +27,7 @@ app.use("/api/ratings", require("./routes/ratings"));
 app.use("/api/messages", require("./routes/messages"));
 app.use("/api/pricing", require("./routes/pricing"));
 app.use("/api/categories", require("./routes/categories"));
+app.use("/api/password-reset", require("./routes/passwordReset"));
 
 const PORT = process.env.PORT || 5000;
 const httpServer = createServer(app);

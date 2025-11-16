@@ -17,12 +17,23 @@ const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [campus, setCampus] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRegister = async () => {
-    if (!name || !email || !password || !campus) {
+    if (!name || !email || !password || !confirmPassword || !campus) {
       Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters long');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
       return;
     }
 
@@ -106,11 +117,27 @@ const RegisterScreen = ({ navigation }) => {
                 <Text style={authStyles.label}>Password</Text>
                 <TextInput
                   style={authStyles.input}
-                  placeholder="Enter your password"
+                  placeholder="Enter your password (min 6 characters)"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry
-                  autoCompleteType="password"
+                  autoCompleteType="off"
+                  textContentType="none"
+                  passwordRules=""
+                />
+              </View>
+
+              <View style={authStyles.inputContainer}>
+                <Text style={authStyles.label}>Confirm Password</Text>
+                <TextInput
+                  style={authStyles.input}
+                  placeholder="Confirm your password"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry
+                  autoCompleteType="off"
+                  textContentType="none"
+                  passwordRules=""
                 />
               </View>
 

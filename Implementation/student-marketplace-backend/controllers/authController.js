@@ -5,9 +5,43 @@ const bcrypt = require("bcryptjs");
 exports.registerUser = async (req, res) => {
   try {
     const { name, email, password, campus } = req.body;
-    const user = await User.create({ name, email, password, campus });
-    res.json(user);
+    
+    // Validate input
+    if (!name || !email || !password || !campus) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+    
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
+    
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User with this email already exists' });
+    }
+    
+    // Create user in our system (password will be hashed by pre-save hook)
+    const user = await User.create({ 
+      name, 
+      email: email.toLowerCase(), 
+      password, 
+      campus 
+    });
+    
+    console.log(`✅ New user registered: ${user.email}`);
+    res.json({ 
+      success: true, 
+      message: 'Account created successfully', 
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        campus: user.campus
+      }
+    });
   } catch (err) {
+    console.error('Registration error:', err);
     res.status(400).json({ error: err.message });
   }
 };
@@ -39,11 +73,22 @@ exports.registerAdmin = async (req, res) => {
 exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ error: "Invalid credentials" });
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+    
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      console.log(`❌ Login failed - User not found: ${email}`);
+      return res.status(400).json({ error: "Invalid credentials" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
+    if (!isMatch) {
+      console.log(`❌ Login failed - Wrong password for: ${email}`);
+      return res.status(400).json({ error: "Invalid credentials" });
+    }
 
     console.log(`🔐 Login attempt for user: ${user.email} (ID: ${user._id})`);
     console.log(`📊 User status - Active: ${user.isActive}, Suspended: ${user.isSuspended}`);
