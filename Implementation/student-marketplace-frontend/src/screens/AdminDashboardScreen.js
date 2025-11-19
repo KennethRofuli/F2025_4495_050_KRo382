@@ -8,7 +8,6 @@ import {
   Alert,
   Image,
   Modal,
-  TextInput,
   ScrollView,
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -20,14 +19,12 @@ import { dashboardStyles } from '../styles/DashboardStyles';
 
 const AdminDashboardScreen = ({ navigation }) => {
   const [reports, setReports] = useState([]);
-  const [filteredReports, setFilteredReports] = useState([]);
   const [dashboardStats, setDashboardStats] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
   const [isReportDetailVisible, setIsReportDetailVisible] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [currentView, setCurrentView] = useState('reports'); // 'reports' or 'users'
   const [usersWithReports, setUsersWithReports] = useState([]);
@@ -49,7 +46,6 @@ const AdminDashboardScreen = ({ navigation }) => {
 
       if (reportsResult.success) {
         setReports(reportsResult.data.data || []);
-        setFilteredReports(reportsResult.data.data || []);
       } else {
         Alert.alert('Error', reportsResult.error);
       }
@@ -159,30 +155,6 @@ const AdminDashboardScreen = ({ navigation }) => {
     setSelectedUser(null);
   };
 
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    
-    if (currentView === 'reports') {
-      if (!query.trim()) {
-        setFilteredReports(reports);
-        return;
-      }
-
-      const filtered = reports.filter(report =>
-        report.listing?.title?.toLowerCase().includes(query.toLowerCase()) ||
-        report.reason?.toLowerCase().includes(query.toLowerCase()) ||
-        report.reportedUser?.name?.toLowerCase().includes(query.toLowerCase())
-      );
-      setFilteredReports(filtered);
-    } else {
-      // User search functionality can be added here if needed
-      // For now, we'll just clear the search for users view
-      if (!query.trim()) {
-        // Reset to original users list
-      }
-    }
-  };
-
   const handleStatusFilter = async (status) => {
     console.log('🔍 Filtering reports by status:', status);
     setStatusFilter(status);
@@ -197,7 +169,6 @@ const AdminDashboardScreen = ({ navigation }) => {
         const reportData = reportsResult.data.data || [];
         console.log(`✅ Found ${reportData.length} reports with status: ${status}`);
         setReports(reportData);
-        setFilteredReports(reportData);
       } else {
         console.error('❌ Error fetching reports:', reportsResult.error);
         Alert.alert('Error', reportsResult.error);
@@ -243,7 +214,6 @@ const AdminDashboardScreen = ({ navigation }) => {
           const reportData = reportsResult.data.data || [];
           console.log(`✅ Refreshed ${reportData.length} reports`);
           setReports(reportData);
-          setFilteredReports(reportData);
         }
         
         // Refresh dashboard stats
@@ -406,25 +376,14 @@ const AdminDashboardScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Search Bar */}
-      <View style={dashboardStyles.searchContainer}>
-        <TextInput
-          style={dashboardStyles.searchInput}
-          placeholder={currentView === 'reports' ? "Search reports by listing, reason, or user..." : "Search users by name or email..."}
-          value={searchQuery}
-          onChangeText={handleSearch}
-          clearButtonMode="while-editing"
-        />
-      </View>
-
       {/* Content Area */}
       {currentView === 'reports' ? (
         /* Reports List */
         <FlatList
-          data={filteredReports}
+          data={reports}
           renderItem={({ item }) => renderReportCard(item)}
           keyExtractor={(item) => item._id}
-          contentContainerStyle={filteredReports.length === 0 ? dashboardStyles.scrollContainer : null}
+          contentContainerStyle={reports.length === 0 ? dashboardStyles.scrollContainer : null}
           refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
           showsVerticalScrollIndicator={false}
           removeClippedSubviews={true}
@@ -436,11 +395,6 @@ const AdminDashboardScreen = ({ navigation }) => {
             <View style={dashboardStyles.emptyContainer}>
               {isLoading ? (
                 <Text style={dashboardStyles.emptyText}>Loading reports...</Text>
-              ) : searchQuery ? (
-                <>
-                  <Text style={dashboardStyles.emptyText}>No results found</Text>
-                  <Text style={dashboardStyles.emptySubtext}>Try searching for something else</Text>
-                </>
               ) : (
                 <>
                   <Text style={dashboardStyles.emptyText}>No reports found</Text>
@@ -538,6 +492,13 @@ const AdminDashboardScreen = ({ navigation }) => {
             >
               <Text style={dashboardStyles.modalItemText}>✅ Resolved Reports</Text>
             </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={dashboardStyles.modalItem} 
+              onPress={() => handleStatusFilter('dismissed')}
+            >
+              <Text style={dashboardStyles.modalItemText}>❌ Dismissed Reports</Text>
+            </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
@@ -578,6 +539,26 @@ const AdminDashboardScreen = ({ navigation }) => {
                 <Text style={styles.detailText}>Title: {selectedReport.listing?.title || 'Deleted'}</Text>
                 <Text style={styles.detailText}>Category: {selectedReport.listing?.category || 'N/A'}</Text>
                 <Text style={styles.detailText}>Price: ${selectedReport.listing?.price || 'N/A'}</Text>
+                
+                {/* Listing Description */}
+                {selectedReport.listing?.description && (
+                  <View style={styles.descriptionContainer}>
+                    <Text style={styles.descriptionLabel}>Description:</Text>
+                    <Text style={styles.descriptionText}>{selectedReport.listing.description}</Text>
+                  </View>
+                )}
+                
+                {/* Listing Photo */}
+                {(selectedReport.listing?.imageUrl || selectedReport.listing?.photo) && (
+                  <View style={styles.imageContainer}>
+                    <Text style={styles.descriptionLabel}>Listing Photo:</Text>
+                    <Image 
+                      source={{ uri: selectedReport.listing.imageUrl || selectedReport.listing.photo }} 
+                      style={styles.listingImage}
+                      resizeMode="cover"
+                    />
+                  </View>
+                )}
               </View>
 
               {/* User Info */}
@@ -947,6 +928,35 @@ const styles = {
     fontSize: 14,
     color: '#7f8c8d',
     textAlign: 'center',
+  },
+  descriptionContainer: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#3498db',
+  },
+  descriptionLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#2c3e50',
+    marginBottom: 6,
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: '#34495e',
+    lineHeight: 20,
+  },
+  imageContainer: {
+    marginTop: 12,
+  },
+  listingImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginTop: 8,
+    backgroundColor: '#f0f0f0',
   },
 };
 

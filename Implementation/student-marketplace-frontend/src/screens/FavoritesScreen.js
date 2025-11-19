@@ -15,8 +15,6 @@ import { favoritesAPI, authAPI } from '../services/api';
 import AddListingModal from '../components/AddListingModal';
 import HeartIcon from '../components/HeartIcon';
 import { RatingBadge } from '../components/RatingDisplay';
-import FloatingMessageButton from '../components/FloatingMessageButton';
-import MessagesModal from '../components/MessagesModal';
 import ListingOptionsModal from '../components/ListingOptionsModal';
 import { dashboardStyles } from '../styles/DashboardStyles';
 
@@ -30,8 +28,6 @@ const FavoritesScreen = ({ navigation }) => {
   const [selectedListing, setSelectedListing] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentUserId, setCurrentUserId] = useState(null);
-  const [showMessagesModal, setShowMessagesModal] = useState(false);
-  const [messageRefreshTrigger, setMessageRefreshTrigger] = useState(0);
 
   useEffect(() => {
     loadFavorites();
@@ -296,22 +292,6 @@ const FavoritesScreen = ({ navigation }) => {
         onListingUpdated={loadFavorites}
       />
 
-      {/* Floating Message Button */}
-      <FloatingMessageButton 
-        onPress={() => setShowMessagesModal(true)} 
-        refreshTrigger={messageRefreshTrigger}
-      />
-
-      {/* Messages Modal */}
-      <MessagesModal
-        visible={showMessagesModal}
-        onClose={() => {
-          setShowMessagesModal(false);
-          setTimeout(() => {
-            setMessageRefreshTrigger(prev => prev + 1);
-          }, 100);
-        }}
-      />
     </SafeAreaView>
   );
 };

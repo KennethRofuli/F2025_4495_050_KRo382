@@ -18,8 +18,7 @@ import { RatingBadge } from '../components/RatingDisplay';
 import AddListingModal from '../components/AddListingModal';
 import ListingOptionsModal from '../components/ListingOptionsModal';
 import HeartIcon from '../components/HeartIcon';
-import FloatingMessageButton from '../components/FloatingMessageButton';
-import MessagesModal from '../components/MessagesModal';
+
 
 const MyListingsScreen = ({ navigation }) => {
   const [myListings, setMyListings] = useState([]);
@@ -32,8 +31,6 @@ const MyListingsScreen = ({ navigation }) => {
   const [isOptionsModalVisible, setIsOptionsModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentUserId, setCurrentUserId] = useState(null);
-  const [showMessagesModal, setShowMessagesModal] = useState(false);
-  const [messageRefreshTrigger, setMessageRefreshTrigger] = useState(0);
 
   useEffect(() => {
     loadMyListings();
@@ -337,22 +334,6 @@ const MyListingsScreen = ({ navigation }) => {
         onEditListing={handleEditListing}
       />
 
-      {/* Floating Message Button */}
-      <FloatingMessageButton 
-        onPress={() => setShowMessagesModal(true)} 
-        refreshTrigger={messageRefreshTrigger}
-      />
-
-      {/* Messages Modal */}
-      <MessagesModal
-        visible={showMessagesModal}
-        onClose={() => {
-          setShowMessagesModal(false);
-          setTimeout(() => {
-            setMessageRefreshTrigger(prev => prev + 1);
-          }, 100);
-        }}
-      />
     </SafeAreaView>
   );
 };

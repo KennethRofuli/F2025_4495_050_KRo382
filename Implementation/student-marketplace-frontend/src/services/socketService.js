@@ -28,9 +28,9 @@ class SocketService {
 
       // Connect to socket server
       // For production: 
-      const SOCKET_URL = 'https://studentmartketplace-backend.onrender.com';
+      //const SOCKET_URL = 'https://studentmartketplace-backend.onrender.com';
       // For local development:
-      //const SOCKET_URL = 'http://10.0.0.26:5000';
+      const SOCKET_URL = 'http://10.0.0.26:5000';
       
       console.log('🔄 Attempting to connect to Socket.IO server:', SOCKET_URL);
       console.log('👤 User ID:', this.userId);

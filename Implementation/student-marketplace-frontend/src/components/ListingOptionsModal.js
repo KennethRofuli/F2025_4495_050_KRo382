@@ -8,9 +8,6 @@ import {
   Image,
   ScrollView,
   Platform,
-  Dimensions,
-  BackHandler,
-  SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { listingOptionsModalStyles } from '../styles/ListingOptionsModalStyles';
@@ -36,17 +33,7 @@ const ListingOptionsModal = ({ visible, onClose, listing, currentUserId, onListi
     }
   }, [visible, listing, isOwner]);
 
-  // Handle Android back button for report modal
-  useEffect(() => {
-    if (Platform.OS === 'android' && showReportModal) {
-      const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-        setShowReportModal(false);
-        return true; // Prevent default back behavior
-      });
-      
-      return () => backHandler.remove();
-    }
-  }, [showReportModal]);
+
 
   const loadExistingRating = async () => {
     try {
@@ -128,12 +115,35 @@ const ListingOptionsModal = ({ visible, onClose, listing, currentUserId, onListi
   };
 
   const handleReportListing = () => {
-    setShowReportModal(true);
+    if (Platform.OS === 'ios') {
+      // Use Alert.alert on iOS (works perfectly)
+      onClose();
+      Alert.alert(
+        'Report Listing',
+        'Why are you reporting this listing?',
+        [
+          { text: 'Inappropriate Content', onPress: () => submitReport('inappropriate_content') },
+          { text: 'Spam', onPress: () => submitReport('spam') },
+          { text: 'Scam/Suspicious', onPress: () => submitReport('scam_suspicious') },
+          { text: 'Fake Listing', onPress: () => submitReport('fake_listing') },
+          { text: 'Offensive Language', onPress: () => submitReport('offensive_language') },
+          { text: 'Prohibited Item', onPress: () => submitReport('prohibited_item') },
+          { text: 'Other', onPress: () => submitReport('other') },
+          { text: 'Cancel', style: 'cancel' },
+        ]
+      );
+    } else {
+      // Use custom modal on Android (scrollable)
+      setShowReportModal(true);
+    }
   };
 
   const submitReport = async (reason) => {
-    setShowReportModal(false);
-    onClose();
+    // Close report modal if it was open
+    if (showReportModal) {
+      setShowReportModal(false);
+      onClose();
+    }
     
     try {
       const result = await reportsAPI.submitReport(listing._id, reason);
@@ -236,10 +246,8 @@ const ListingOptionsModal = ({ visible, onClose, listing, currentUserId, onListi
     );
   };
 
+  // Simple Report Modal for Android
   const ReportModal = () => {
-    const screenHeight = Dimensions.get('window').height;
-    const maxModalHeight = screenHeight * 0.7; // 70% of screen height
-    
     const reportOptions = [
       { label: '🚫 Inappropriate Content', value: 'inappropriate_content' },
       { label: '📧 Spam', value: 'spam' },
@@ -257,61 +265,31 @@ const ListingOptionsModal = ({ visible, onClose, listing, currentUserId, onListi
         animationType="slide"
         onRequestClose={() => setShowReportModal(false)}
       >
-        <TouchableOpacity 
-          style={reportModalStyles.overlay}
-          activeOpacity={1}
-          onPress={() => setShowReportModal(false)}
-        >
-          <View style={[
-            reportModalStyles.modalContainer,
-            Platform.OS === 'android' && { maxHeight: maxModalHeight }
-          ]}>
-            <TouchableOpacity activeOpacity={1} onPress={() => {}}>
-              <SafeAreaView>
-                <Text style={reportModalStyles.title}>Report Listing</Text>
-                <Text style={reportModalStyles.subtitle}>
-                  Why are you reporting this listing?
-                </Text>
-                
-                <ScrollView 
-                  style={[
-                    reportModalStyles.optionsScrollView,
-                    Platform.OS === 'android' && { 
-                      maxHeight: maxModalHeight * 0.6 
-                    }
-                  ]}
-                  showsVerticalScrollIndicator={Platform.OS === 'android'}
-                  bounces={Platform.OS === 'ios'}
-                >
-                  {reportOptions.map((option, index) => (
-                    <TouchableOpacity
-                      key={option.value}
-                      style={[
-                        reportModalStyles.reportOption,
-                        index === reportOptions.length - 1 && reportModalStyles.lastOption
-                      ]}
-                      onPress={() => submitReport(option.value)}
-                      hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
-                    >
-                      <Text style={reportModalStyles.reportOptionText}>
-                        {option.label}
-                      </Text>
-                      <Ionicons name="chevron-forward" size={20} color="#666" />
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-                
+        <View style={reportModalStyles.overlay}>
+          <View style={reportModalStyles.container}>
+            <Text style={reportModalStyles.title}>Report Listing</Text>
+            <Text style={reportModalStyles.subtitle}>Why are you reporting this listing?</Text>
+            
+            <ScrollView style={reportModalStyles.scrollView}>
+              {reportOptions.map((option, index) => (
                 <TouchableOpacity
-                  style={reportModalStyles.cancelButton}
-                  onPress={() => setShowReportModal(false)}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  key={option.value}
+                  style={reportModalStyles.option}
+                  onPress={() => submitReport(option.value)}
                 >
-                  <Text style={reportModalStyles.cancelButtonText}>Cancel</Text>
+                  <Text style={reportModalStyles.optionText}>{option.label}</Text>
                 </TouchableOpacity>
-              </SafeAreaView>
+              ))}
+            </ScrollView>
+            
+            <TouchableOpacity
+              style={reportModalStyles.cancelButton}
+              onPress={() => setShowReportModal(false)}
+            >
+              <Text style={reportModalStyles.cancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
-        </TouchableOpacity>
+        </View>
       </Modal>
     );
   };
@@ -423,7 +401,7 @@ const ListingOptionsModal = ({ visible, onClose, listing, currentUserId, onListi
       receiverId={listing?.seller?._id}
     />
 
-    {/* Report Modal */}
+    {/* Report Modal for Android */}
     <ReportModal />
   </>
   );
@@ -459,85 +437,60 @@ const starRatingStyles = {
   },
 };
 
-// Report Modal Styles
+// Simple Report Modal Styles for Android
 const reportModalStyles = {
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end', // Bottom sheet style for better Android experience
+    justifyContent: 'center',
     alignItems: 'center',
+    padding: 20,
   },
-  modalContainer: {
+  container: {
     backgroundColor: '#ffffff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderRadius: 12,
     width: '100%',
-    paddingBottom: Platform.OS === 'android' ? 20 : 0,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 10,
-      },
-      android: {
-        elevation: 10,
-      },
-    }),
+    maxWidth: 400,
+    maxHeight: '80%',
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
     color: '#333',
     textAlign: 'center',
     paddingTop: 20,
-    paddingBottom: 10,
+    paddingBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#666',
     textAlign: 'center',
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
-  optionsScrollView: {
-    paddingHorizontal: 20,
+  scrollView: {
+    maxHeight: 300,
   },
-  reportOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Platform.OS === 'android' ? 18 : 15, // Larger touch targets for Android
-    paddingHorizontal: 15,
+  option: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
-    backgroundColor: '#ffffff',
-    minHeight: Platform.OS === 'android' ? 56 : 44, // Material Design minimum touch target
   },
-  lastOption: {
-    borderBottomWidth: 0,
-  },
-  reportOptionText: {
+  optionText: {
     fontSize: 16,
     color: '#333',
-    flex: 1,
   },
   cancelButton: {
-    margin: 20,
-    paddingVertical: Platform.OS === 'android' ? 16 : 14,
-    paddingHorizontal: 20,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 10,
+    padding: 16,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    minHeight: Platform.OS === 'android' ? 48 : 44,
-    justifyContent: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
   },
-  cancelButtonText: {
+  cancelText: {
     fontSize: 16,
-    fontWeight: '600',
     color: '#666',
+    fontWeight: '500',
   },
 };
 

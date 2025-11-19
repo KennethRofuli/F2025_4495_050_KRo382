@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -13,19 +13,18 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { listingsAPI, authAPI, tokenManager } from '../services/api';
 import { imageUtils } from '../utils/helpers';
+import { debounce } from '../utils/performance';
 import AddListingModal from '../components/AddListingModal';
 import HeartIcon from '../components/HeartIcon';
 import { RatingBadge } from '../components/RatingDisplay';
 import DealScoreBadge from '../components/DealScoreBadge';
-import FloatingMessageButton from '../components/FloatingMessageButton';
-import MessagesModal from '../components/MessagesModal';
+
 import ListingOptionsModal from '../components/ListingOptionsModal';
 import EditListingModal from '../components/EditListingModal';
 import { dashboardStyles } from '../styles/DashboardStyles';
 
 const DashboardScreen = ({ navigation }) => {
   const [listings, setListings] = useState([]);
-  const [filteredListings, setFilteredListings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
@@ -36,8 +35,6 @@ const DashboardScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentUserId, setCurrentUserId] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
-  const [showMessagesModal, setShowMessagesModal] = useState(false);
-  const [messageRefreshTrigger, setMessageRefreshTrigger] = useState(0);
 
   useEffect(() => {
     loadListings();
@@ -53,7 +50,7 @@ const DashboardScreen = ({ navigation }) => {
     return unsubscribe;
   }, [navigation]);
 
-  const getCurrentUser = async () => {
+  const getCurrentUser = useCallback(async () => {
     try {
       const userId = await authAPI.getCurrentUserId();
       setCurrentUserId(userId);
@@ -73,14 +70,13 @@ const DashboardScreen = ({ navigation }) => {
     } catch (error) {
       console.log('Error getting user details:', error);
     }
-  };
+  }, []);
 
-  const loadListings = async () => {
+  const loadListings = useCallback(async () => {
     try {
       const result = await listingsAPI.getAllListings();
       if (result.success) {
         setListings(result.data);
-        setFilteredListings(result.data);
       } else {
         Alert.alert('Error', result.error);
       }
@@ -90,12 +86,12 @@ const DashboardScreen = ({ navigation }) => {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  };
+  }, []);
 
-  const onRefresh = () => {
+  const onRefresh = useCallback(() => {
     setIsRefreshing(true);
     loadListings();
-  };
+  }, [loadListings]);
 
   const handleLogout = async () => {
     Alert.alert(
@@ -146,6 +142,11 @@ const DashboardScreen = ({ navigation }) => {
     navigation.navigate('MarketIntelligence');
   };
 
+  const handleMessages = () => {
+    setIsMenuVisible(false);
+    navigation.navigate('Messages');
+  };
+
   const handleProfile = () => {
     setIsMenuVisible(false);
     navigation.navigate('Profile');
@@ -165,27 +166,32 @@ const DashboardScreen = ({ navigation }) => {
     setIsEditModalVisible(false);
   };
 
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    
-    if (!query.trim()) {
-      setFilteredListings(listings);
-      return;
+  // Debounced search to prevent excessive filtering
+  const debouncedSearch = useMemo(() => 
+    debounce((query) => setSearchQuery(query), 300), []
+  );
+  
+  const handleSearch = useCallback((query) => {
+    debouncedSearch(query);
+  }, [debouncedSearch]);
+
+  // Memoize filtered listings to prevent unnecessary recalculations
+  const filteredListingsMemo = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return listings;
     }
 
-    const filtered = listings.filter(listing => 
-      listing.title.toLowerCase().includes(query.toLowerCase()) ||
-      listing.category.toLowerCase().includes(query.toLowerCase())
+    const query = searchQuery.toLowerCase();
+    return listings.filter(listing => 
+      listing.title.toLowerCase().includes(query) ||
+      listing.category.toLowerCase().includes(query)
     );
-    setFilteredListings(filtered);
-  };
+  }, [listings, searchQuery]);
 
-  const handleListingAdded = (newListing) => {
-    const updatedListings = [newListing, ...listings];
-    setListings(updatedListings);
-    setFilteredListings(updatedListings);
+  const handleListingAdded = useCallback((newListing) => {
+    setListings(prev => [newListing, ...prev]);
     setIsAddModalVisible(false);
-  };
+  }, []);
 
   const formatPrice = (price) => {
     const numPrice = Number(price) || 0;
@@ -300,10 +306,10 @@ const DashboardScreen = ({ navigation }) => {
 
       {/* Listings */}
       <FlatList
-        data={filteredListings}
+        data={filteredListingsMemo}
         renderItem={({ item }) => renderListing(item)}
         keyExtractor={(item) => item._id}
-        contentContainerStyle={filteredListings.length === 0 ? dashboardStyles.scrollContainer : null}
+        contentContainerStyle={filteredListingsMemo.length === 0 ? dashboardStyles.scrollContainer : null}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
         removeClippedSubviews={true}
@@ -388,6 +394,13 @@ const DashboardScreen = ({ navigation }) => {
             </TouchableOpacity>
             
             <TouchableOpacity 
+              style={[dashboardStyles.modalItem, { borderBottomWidth: 1, borderBottomColor: '#ecf0f1' }]} 
+              onPress={handleMessages}
+            >
+              <Text style={dashboardStyles.modalItemText}>💬 Messages</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
               style={dashboardStyles.modalItem} 
               onPress={handleProfile}
             >
@@ -415,23 +428,6 @@ const DashboardScreen = ({ navigation }) => {
         onListingUpdated={handleListingUpdated}
       />
 
-      {/* Floating Message Button */}
-      <FloatingMessageButton
-        onPress={() => setShowMessagesModal(true)}
-        refreshTrigger={messageRefreshTrigger}
-      />
-
-      {/* Messages Modal */}
-      <MessagesModal
-        visible={showMessagesModal}
-        onClose={() => {
-          setShowMessagesModal(false);
-          // Trigger refresh of floating button after a small delay to avoid blocking UI
-          setTimeout(() => {
-            setMessageRefreshTrigger(prev => prev + 1);
-          }, 100);
-        }}
-      />
     </SafeAreaView>
   );
 };

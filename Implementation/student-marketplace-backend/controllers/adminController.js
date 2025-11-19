@@ -15,7 +15,7 @@ exports.getAllReports = async (req, res) => {
     console.log('📊 Getting reports with filter:', filter);
 
     const reports = await Report.find(filter)
-      .populate('listing', 'title price category')
+      .populate('listing', 'title price category description imageUrl photo')
       .populate('reporter', 'name email')
       .populate('reportedUser', 'name email campus reportCount')
       .populate('reviewedBy', 'name')
@@ -96,6 +96,10 @@ exports.updateReport = async (req, res) => {
 
     console.log(`📝 Current report status: ${report.status} -> New status: ${status}`);
 
+    // Check if report was previously pending and is now being dismissed
+    const wasPending = report.status === 'pending';
+    const isBeingDismissed = status === 'dismissed';
+    
     // Update report
     report.status = status || report.status;
     report.actionTaken = actionTaken || report.actionTaken;
@@ -106,6 +110,15 @@ exports.updateReport = async (req, res) => {
     await report.save();
 
     console.log(`✅ Report ${reportId} updated successfully to status: ${report.status}`);
+
+    // Handle report count for dismissed reports
+    if (wasPending && isBeingDismissed && report.reportedUser) {
+      // Decrement report count when dismissing a pending report
+      await User.findByIdAndUpdate(report.reportedUser._id, {
+        $inc: { reportCount: -1 }
+      });
+      console.log(`📉 Decremented report count for user ${report.reportedUser._id} due to dismissal`);
+    }
 
     // Take action based on actionTaken
     if (actionTaken === 'listing_removed' && report.listing) {

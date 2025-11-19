@@ -6,13 +6,19 @@ import * as SecureStore from 'expo-secure-store';
 const BASE_URL = 'http://10.0.0.26:5000/api';
 //const BASE_URL = 'https://studentmartketplace-backend.onrender.com/api';
 
-// Create axios instance
+// Simple cache for GET requests
+const requestCache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Create axios instance with optimizations
 const api = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000,
+  timeout: 15000, // Increased timeout for better reliability
   headers: {
     'Content-Type': 'application/json',
   },
+  // Enable compression
+  decompress: true,
 });
 
 // Token management
@@ -46,13 +52,26 @@ export const tokenManager = {
   },
 };
 
-// Add request interceptor to include token in headers
+// Request interceptor to add auth token and handle caching
 api.interceptors.request.use(
   async (config) => {
     const token = await tokenManager.getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Add cache key for GET requests
+    if (config.method === 'get') {
+      const cacheKey = `${config.url}_${JSON.stringify(config.params || {})}`;
+      const cachedData = requestCache.get(cacheKey);
+      
+      if (cachedData && (Date.now() - cachedData.timestamp) < CACHE_DURATION) {
+        // Return cached response
+        config._cachedResponse = cachedData.data;
+      }
+      config._cacheKey = cacheKey;
+    }
+    
     return config;
   },
   (error) => {
@@ -60,14 +79,38 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor to handle token expiration
+// Response interceptor for caching and error handling
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const config = response.config;
+    
+    // Cache successful GET responses
+    if (config.method === 'get' && config._cacheKey && response.status === 200) {
+      requestCache.set(config._cacheKey, {
+        data: response,
+        timestamp: Date.now()
+      });
+      
+      // Clean old cache entries periodically
+      if (requestCache.size > 50) {
+        const oldEntries = Array.from(requestCache.entries())
+          .filter(([, value]) => (Date.now() - value.timestamp) > CACHE_DURATION)
+          .slice(0, 10);
+        oldEntries.forEach(([key]) => requestCache.delete(key));
+      }
+    }
+    
+    return response;
+  },
   async (error) => {
+    // Check for cached response on network error
+    if (error.config?._cachedResponse && error.code === 'NETWORK_ERROR') {
+      console.log('📦 Using cached response for:', error.config.url);
+      return error.config._cachedResponse;
+    }
+    
     if (error.response?.status === 401) {
-      // Token expired or invalid, remove it
       await tokenManager.removeToken();
-      // You can add navigation to login screen here if needed
     }
     return Promise.reject(error);
   }
