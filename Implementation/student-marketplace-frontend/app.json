@@ -1,16 +1,14 @@
 {
   "expo": {
-    "name": "student-marketplace-frontend",
+    "name": "Student Marketplace",
     "slug": "student-marketplace-frontend",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#ffffff",
+      "resizeMode": "contain"
     },
     "ios": {
       "supportsTablet": true,

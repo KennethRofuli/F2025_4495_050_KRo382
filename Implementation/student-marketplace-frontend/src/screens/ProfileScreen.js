@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
@@ -10,10 +9,12 @@ import {
   SafeAreaView,
   Image,
 } from 'react-native';
+import { TextInput as PaperTextInput, Button } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { UserRatingDisplay } from '../components/RatingDisplay';
 import { ratingAPI, authAPI, tokenManager } from '../services/api';
 import realTimeService from '../services/realTimeService';
+import { colors, spacing, typography, borderRadius, commonStyles } from '../styles/CommonStyles';
 
 const ProfileScreen = ({ navigation }) => {
   const [userInfo, setUserInfo] = useState({
@@ -218,48 +219,59 @@ const ProfileScreen = ({ navigation }) => {
           <Text style={styles.sectionTitle}>Personal Information</Text>
           
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Name</Text>
-            <TextInput
-              style={[styles.input, !isEditing && styles.inputDisabled]}
+            <PaperTextInput
+              label="Name"
               value={userInfo.name}
               onChangeText={(text) => setUserInfo(prev => ({ ...prev, name: text }))}
               editable={isEditing}
-              placeholder="Enter your name"
+              mode="outlined"
+              style={{ backgroundColor: isEditing ? '#fff' : '#f8f9fa' }}
+              outlineColor="#ddd"
+              activeOutlineColor="#3498db"
+              disabled={!isEditing}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Email</Text>
-            <TextInput
-              style={[styles.input, styles.inputDisabled]}
+            <PaperTextInput
+              label="Email"
               value={userInfo.email}
               editable={false}
-              placeholder="your.email@example.com"
+              mode="outlined"
+              style={{ backgroundColor: '#f8f9fa' }}
+              outlineColor="#ddd"
+              activeOutlineColor="#3498db"
+              disabled={true}
             />
             <Text style={styles.inputNote}>Email cannot be changed</Text>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Campus</Text>
-            <TextInput
-              style={[styles.input, !isEditing && styles.inputDisabled]}
+            <PaperTextInput
+              label="Campus"
               value={userInfo.campus}
               onChangeText={(text) => setUserInfo(prev => ({ ...prev, campus: text }))}
               editable={isEditing}
-              placeholder="Your campus"
+              mode="outlined"
+              style={{ backgroundColor: isEditing ? '#fff' : '#f8f9fa' }}
+              outlineColor="#ddd"
+              activeOutlineColor="#3498db"
+              disabled={!isEditing}
             />
           </View>
 
           {isEditing && (
-            <TouchableOpacity
-              style={styles.saveButton}
+            <Button
+              mode="contained"
               onPress={handleUpdateProfile}
+              loading={loading}
               disabled={loading}
+              style={{ borderRadius: 8, marginTop: 10 }}
+              contentStyle={{ paddingVertical: 8 }}
+              buttonColor="#3498db"
             >
-              <Text style={styles.saveButtonText}>
-                {loading ? 'Saving...' : 'Save Changes'}
-              </Text>
-            </TouchableOpacity>
+              Save Changes
+            </Button>
           )}
         </View>
 
@@ -297,45 +309,62 @@ const ProfileScreen = ({ navigation }) => {
 
           {isChangingPassword && (
             <View style={styles.passwordSection}>
-              <TextInput
-                style={styles.input}
+              <PaperTextInput
+                label="Current Password"
                 value={passwords.currentPassword}
                 onChangeText={(text) => setPasswords(prev => ({ ...prev, currentPassword: text }))}
-                placeholder="Current Password"
                 secureTextEntry
+                mode="outlined"
+                style={{ backgroundColor: '#fff', marginBottom: 16 }}
+                outlineColor="#ddd"
+                activeOutlineColor="#3498db"
               />
-              <TextInput
-                style={styles.input}
+              <PaperTextInput
+                label="New Password"
                 value={passwords.newPassword}
                 onChangeText={(text) => setPasswords(prev => ({ ...prev, newPassword: text }))}
-                placeholder="New Password"
                 secureTextEntry
+                mode="outlined"
+                style={{ backgroundColor: '#fff', marginBottom: 16 }}
+                outlineColor="#ddd"
+                activeOutlineColor="#3498db"
               />
-              <TextInput
-                style={styles.input}
+              <PaperTextInput
+                label="Confirm New Password"
                 value={passwords.confirmPassword}
                 onChangeText={(text) => setPasswords(prev => ({ ...prev, confirmPassword: text }))}
-                placeholder="Confirm New Password"
                 secureTextEntry
+                mode="outlined"
+                style={{ backgroundColor: '#fff', marginBottom: 16 }}
+                outlineColor="#ddd"
+                activeOutlineColor="#3498db"
               />
-              <TouchableOpacity
-                style={styles.changePasswordButton}
+              <Button
+                mode="contained"
                 onPress={handleChangePassword}
+                loading={loading}
                 disabled={loading}
+                style={{ borderRadius: 8 }}
+                contentStyle={{ paddingVertical: 8 }}
+                buttonColor="#FF6B35"
               >
-                <Text style={styles.changePasswordButtonText}>
-                  {loading ? 'Changing...' : 'Change Password'}
-                </Text>
-              </TouchableOpacity>
+                Change Password
+              </Button>
             </View>
           )}
         </View>
 
         {/* Logout Section */}
         <View style={styles.section}>
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutButtonText}>Logout</Text>
-          </TouchableOpacity>
+          <Button
+            mode="contained"
+            onPress={handleLogout}
+            style={{ borderRadius: 8 }}
+            contentStyle={{ paddingVertical: 8 }}
+            buttonColor="#dc3545"
+          >
+            Logout
+          </Button>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -344,153 +373,95 @@ const ProfileScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
+    ...commonStyles.container,
   },
   scrollView: {
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    ...commonStyles.screenHeader,
   },
   backButton: {
-    padding: 5,
+    ...commonStyles.backButton,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    ...commonStyles.screenHeaderTitle,
   },
   editButton: {
-    padding: 5,
+    padding: spacing.xs,
   },
   avatarSection: {
     alignItems: 'center',
-    paddingVertical: 30,
-    backgroundColor: 'white',
-    marginBottom: 10,
+    paddingVertical: spacing.xxxl,
+    backgroundColor: colors.white,
+    marginBottom: spacing.sm,
   },
   avatarContainer: {
-    marginBottom: 15,
+    marginBottom: spacing.md,
   },
   avatar: {
     width: 100,
     height: 100,
-    borderRadius: 50,
+    borderRadius: borderRadius.round * 2,
   },
   defaultAvatar: {
     width: 100,
     height: 100,
-    borderRadius: 50,
-    backgroundColor: '#f0f0f0',
+    borderRadius: borderRadius.round * 2,
+    backgroundColor: colors.placeholder,
     justifyContent: 'center',
     alignItems: 'center',
   },
   changeAvatarButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    backgroundColor: '#007AFF',
-    borderRadius: 20,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.xxl,
   },
   changeAvatarText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '500',
+    color: colors.white,
+    fontSize: typography.sm,
+    fontWeight: typography.medium,
   },
   section: {
-    backgroundColor: 'white',
-    padding: 20,
-    marginBottom: 10,
+    ...commonStyles.section,
+    marginBottom: spacing.sm,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 20,
+    ...commonStyles.sectionTitle,
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: spacing.xl,
   },
   inputLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
-    marginBottom: 8,
+    ...commonStyles.label,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    fontSize: 16,
-    backgroundColor: 'white',
+    ...commonStyles.input,
   },
   inputDisabled: {
-    backgroundColor: '#f8f9fa',
-    color: '#666',
+    backgroundColor: colors.background,
+    color: colors.textSecondary,
   },
   inputNote: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  saveButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  saveButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: typography.xs,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
   },
   securityOption: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 15,
+    paddingVertical: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: colors.borderLighter,
   },
   securityOptionText: {
-    fontSize: 16,
-    color: '#333',
+    fontSize: typography.md,
+    color: colors.textPrimary,
   },
   passwordSection: {
-    paddingTop: 20,
-  },
-  changePasswordButton: {
-    backgroundColor: '#FF6B35',
-    borderRadius: 8,
-    paddingVertical: 15,
-    alignItems: 'center',
-    marginTop: 15,
-  },
-  changePasswordButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  logoutButton: {
-    backgroundColor: '#dc3545',
-    borderRadius: 8,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  logoutButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
+    paddingTop: spacing.xl,
   },
 });
 

@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { listingsAPI, authAPI } from '../services/api';
 import { dashboardStyles } from '../styles/DashboardStyles';
+import { colors, spacing, typography, borderRadius } from '../styles/CommonStyles';
 import EditListingModal from '../components/EditListingModal';
 import { RatingBadge } from '../components/RatingDisplay';
 import AddListingModal from '../components/AddListingModal';
@@ -343,33 +344,33 @@ const styles = {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   actionsContainer: {
     flexDirection: 'row',
-    gap: 8,
+    gap: spacing.sm,
   },
   editButton: {
-    backgroundColor: '#3498db',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.sm,
   },
   editButtonText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
+    color: colors.white,
+    fontSize: typography.xs,
+    fontWeight: typography.semiBold,
   },
   deleteButton: {
-    backgroundColor: '#e74c3c',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
+    backgroundColor: colors.danger,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.sm,
   },
   deleteButtonText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
+    color: colors.white,
+    fontSize: typography.xs,
+    fontWeight: typography.semiBold,
   },
 };
 

@@ -9,6 +9,7 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
+import { Button } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { listingOptionsModalStyles } from '../styles/ListingOptionsModalStyles';
 import { reportsAPI, listingsAPI, ratingAPI } from '../services/api';
@@ -333,23 +334,27 @@ const ListingOptionsModal = ({ visible, onClose, listing, currentUserId, onListi
               {isOwner ? (
                 // Owner actions
                 <>
-                  <TouchableOpacity 
-                    style={[listingOptionsModalStyles.messageButton, { backgroundColor: '#3498db' }]}
+                  <Button
+                    mode="contained"
                     onPress={handleEditListing}
+                    style={{ borderRadius: 8, marginHorizontal: 20, marginBottom: 12 }}
+                    contentStyle={{ paddingVertical: 8 }}
+                    buttonColor="#3498db"
+                    icon="pencil"
                   >
-                    <Text style={listingOptionsModalStyles.messageButtonText}>
-                      📝 Edit Listing
-                    </Text>
-                  </TouchableOpacity>
+                    Edit Listing
+                  </Button>
 
-                  <TouchableOpacity 
-                    style={[listingOptionsModalStyles.reportButton, { backgroundColor: '#e74c3c' }]}
+                  <Button
+                    mode="contained"
                     onPress={handleDeleteListing}
+                    style={{ borderRadius: 8, marginHorizontal: 20 }}
+                    contentStyle={{ paddingVertical: 8 }}
+                    buttonColor="#e74c3c"
+                    icon="delete"
                   >
-                    <Text style={listingOptionsModalStyles.reportButtonText}>
-                      🗑️ Delete Listing
-                    </Text>
-                  </TouchableOpacity>
+                    Delete Listing
+                  </Button>
                 </>
               ) : (
                 // Non-owner actions
@@ -379,14 +384,17 @@ const ListingOptionsModal = ({ visible, onClose, listing, currentUserId, onListi
             </View>
 
             {/* Cancel Button */}
-            <TouchableOpacity 
-              style={listingOptionsModalStyles.cancelButton}
-              onPress={onClose}
-            >
-              <Text style={listingOptionsModalStyles.cancelButtonText}>
+            <View style={{ paddingHorizontal: 20, paddingVertical: 15 }}>
+              <Button
+                mode="outlined"
+                onPress={onClose}
+                style={{ borderRadius: 8 }}
+                contentStyle={{ paddingVertical: 8 }}
+                textColor="#666"
+              >
                 Cancel
-              </Text>
-            </TouchableOpacity>
+              </Button>
+            </View>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>

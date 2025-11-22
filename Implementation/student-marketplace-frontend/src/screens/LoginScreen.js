@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   Alert,
   KeyboardAvoidingView,
@@ -10,6 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { TextInput as PaperTextInput, Button } from 'react-native-paper';
 import { authAPI } from '../services/api';
 import realTimeService from '../services/realTimeService';
 import { authStyles } from '../styles/AuthStyles';
@@ -18,6 +18,7 @@ const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -104,35 +105,41 @@ const LoginScreen = ({ navigation }) => {
 
             {/* Form */}
             <View style={authStyles.formContainer}>
-              <View style={authStyles.inputContainer}>
-                <Text style={authStyles.label}>Email</Text>
-                <TextInput
-                  style={authStyles.input}
-                  placeholder="Enter your email"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCompleteType="email"
-                />
-              </View>
+              <PaperTextInput
+                label="Email"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                mode="outlined"
+                style={{ marginBottom: 16, backgroundColor: '#fff' }}
+                outlineColor="#ddd"
+                activeOutlineColor="#3498db"
+                left={<PaperTextInput.Icon icon="email" />}
+              />
 
-              <View style={authStyles.inputContainer}>
-                <Text style={authStyles.label}>Password</Text>
-                <TextInput
-                  style={authStyles.input}
-                  placeholder="Enter your password"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  autoCompleteType="off"
-                  textContentType="none"
-                  passwordRules=""
-                />
-              </View>
+              <PaperTextInput
+                label="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!passwordVisible}
+                autoComplete="password"
+                mode="outlined"
+                style={{ marginBottom: 8, backgroundColor: '#fff' }}
+                outlineColor="#ddd"
+                activeOutlineColor="#3498db"
+                left={<PaperTextInput.Icon icon="lock" />}
+                right={
+                  <PaperTextInput.Icon 
+                    icon={passwordVisible ? "eye-off" : "eye"} 
+                    onPress={() => setPasswordVisible(!passwordVisible)}
+                  />
+                }
+              />
 
               {/* Forgot Password Link */}
-              <View style={authStyles.forgotPasswordContainer}>
+              <View style={[authStyles.forgotPasswordContainer, { marginTop: -8 }]}>
                 <TouchableOpacity 
                   onPress={() => navigation.navigate('ForgotPassword')}
                   disabled={isLoading}
@@ -142,21 +149,17 @@ const LoginScreen = ({ navigation }) => {
               </View>
 
               <View style={authStyles.buttonContainer}>
-                <TouchableOpacity
-                  style={[
-                    authStyles.primaryButton, 
-                    isLoading && authStyles.primaryButtonDisabled
-                  ]}
+                <Button
+                  mode="contained"
                   onPress={handleLogin}
+                  loading={isLoading}
                   disabled={isLoading}
+                  style={{ borderRadius: 8, paddingVertical: 6 }}
+                  contentStyle={{ paddingVertical: 8 }}
+                  buttonColor="#3498db"
                 >
-                  <Text style={[
-                    authStyles.primaryButtonText,
-                    isLoading && authStyles.primaryButtonTextDisabled
-                  ]}>
-                    {isLoading ? 'Logging in...' : 'Login'}
-                  </Text>
-                </TouchableOpacity>
+                  Login
+                </Button>
               </View>
             </View>
 

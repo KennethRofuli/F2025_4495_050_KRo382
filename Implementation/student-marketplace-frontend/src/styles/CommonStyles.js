@@ -5,22 +5,33 @@ export const colors = {
   // Primary colors
   primary: '#3498db',
   primaryDark: '#2980b9',
+  primaryLight: '#d4e9f7',
   
   // Secondary colors
+  secondary: '#34495e',
   success: '#27ae60',
   warning: '#f39c12',
+  warningAlt: '#FF6B35',
   danger: '#e74c3c',
+  dangerDark: '#dc3545',
   
   // Neutral colors
   white: '#ffffff',
   black: '#000000',
   dark: '#2c3e50',
   gray: '#7f8c8d',
+  grayMedium: '#666',
   lightGray: '#95a5a6',
   extraLightGray: '#bdc3c7',
   background: '#f8f9fa',
+  backgroundLight: '#f5f5f5',
   border: '#e1e8ed',
+  borderLight: '#ddd',
+  borderLighter: '#eee',
   placeholder: '#ecf0f1',
+  textPrimary: '#333',
+  textSecondary: '#666',
+  textDisabled: '#999',
 };
 
 export const spacing = {
@@ -61,12 +72,19 @@ export const borderRadius = {
 };
 
 export const shadows = {
+  none: {
+    elevation: 0,
+    shadowColor: 'transparent',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+  },
   light: {
-    elevation: 2,
+    elevation: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 2,
   },
   medium: {
     elevation: 3,
@@ -82,6 +100,23 @@ export const shadows = {
     shadowOpacity: 0.25,
     shadowRadius: 8,
   },
+};
+
+// Paper Theme Configuration (for React Native Paper)
+export const paperTheme = {
+  colors: {
+    primary: colors.primary,
+    primaryContainer: colors.primaryLight,
+    secondary: colors.secondary,
+    background: colors.background,
+    surface: colors.white,
+    error: colors.danger,
+    onPrimary: colors.white,
+    onSecondary: colors.white,
+    onBackground: colors.dark,
+    onSurface: colors.dark,
+  },
+  roundness: borderRadius.md,
 };
 
 // Common/Shared Styles
@@ -258,5 +293,75 @@ export const commonStyles = StyleSheet.create({
   },
   disabledText: {
     color: colors.gray,
+  },
+  
+  // Common screen layouts
+  screenHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLighter,
+  },
+  screenHeaderTitle: {
+    fontSize: typography.lg,
+    fontWeight: typography.semiBold,
+    color: colors.textPrimary,
+  },
+  backButton: {
+    padding: spacing.xs,
+  },
+  
+  // Section styles
+  section: {
+    backgroundColor: colors.white,
+    padding: spacing.xl,
+    marginBottom: spacing.sm,
+  },
+  sectionTitle: {
+    fontSize: typography.lg,
+    fontWeight: typography.semiBold,
+    color: colors.textPrimary,
+    marginBottom: spacing.xl,
+  },
+  
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: colors.white,
+    borderRadius: borderRadius.xl,
+    padding: spacing.xl,
+    width: '90%',
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLighter,
+    marginBottom: spacing.lg,
+  },
+  modalTitle: {
+    fontSize: typography.xl,
+    fontWeight: typography.semiBold,
+    color: colors.textPrimary,
+  },
+  closeButton: {
+    padding: spacing.sm,
+  },
+  closeButtonText: {
+    fontSize: typography.xxl,
+    color: colors.gray,
+    fontWeight: typography.normal,
   },
 });

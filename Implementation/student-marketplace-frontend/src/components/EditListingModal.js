@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   Modal,
   ScrollView,
@@ -11,6 +10,7 @@ import {
   Platform,
   Image,
 } from 'react-native';
+import { TextInput as PaperTextInput, Button } from 'react-native-paper';
 import * as ImagePicker from 'expo-image-picker';
 import { listingsAPI } from '../services/api';
 import { addListingModalStyles } from '../styles/AddListingModalStyles';
@@ -212,50 +212,59 @@ const EditListingModal = ({ visible, onClose, listing, onListingUpdated }) => {
           <ScrollView style={addListingModalStyles.scrollContainer} showsVerticalScrollIndicator={false}>
             <View style={addListingModalStyles.form}>
               <View style={addListingModalStyles.inputContainer}>
-                <Text style={addListingModalStyles.label}>Title *</Text>
-                <TextInput
-                  style={addListingModalStyles.input}
-                  placeholder="Enter listing title"
+                <PaperTextInput
+                  label="Title *"
                   value={title}
                   onChangeText={setTitle}
                   maxLength={100}
+                  mode="outlined"
+                  style={{ backgroundColor: '#fff' }}
+                  outlineColor="#ddd"
+                  activeOutlineColor="#3498db"
                 />
               </View>
 
               <View style={addListingModalStyles.inputContainer}>
-                <Text style={addListingModalStyles.label}>Description *</Text>
-                <TextInput
-                  style={[addListingModalStyles.input, addListingModalStyles.descriptionInput]}
-                  placeholder="Describe your item..."
+                <PaperTextInput
+                  label="Description *"
                   value={description}
                   onChangeText={setDescription}
                   multiline
                   numberOfLines={4}
-                  textAlignVertical="top"
                   maxLength={500}
+                  mode="outlined"
+                  style={{ backgroundColor: '#fff' }}
+                  outlineColor="#ddd"
+                  activeOutlineColor="#3498db"
                 />
               </View>
 
               <View style={addListingModalStyles.inputContainer}>
-                <Text style={addListingModalStyles.label}>Price *</Text>
-                <TextInput
-                  style={addListingModalStyles.input}
-                  placeholder="0.00"
+                <PaperTextInput
+                  label="Price *"
                   value={price}
                   onChangeText={setPrice}
                   keyboardType="decimal-pad"
                   maxLength={10}
+                  mode="outlined"
+                  style={{ backgroundColor: '#fff' }}
+                  outlineColor="#ddd"
+                  activeOutlineColor="#3498db"
+                  left={<PaperTextInput.Affix text="$" />}
                 />
               </View>
 
               <View style={addListingModalStyles.inputContainer}>
-                <Text style={addListingModalStyles.label}>Category *</Text>
-                <TextInput
-                  style={addListingModalStyles.input}
+                <PaperTextInput
+                  label="Category *"
                   placeholder="e.g., Books, Electronics, Furniture"
                   value={category}
                   onChangeText={setCategory}
                   maxLength={50}
+                  mode="outlined"
+                  style={{ backgroundColor: '#fff' }}
+                  outlineColor="#ddd"
+                  activeOutlineColor="#3498db"
                 />
               </View>
 
@@ -283,27 +292,26 @@ const EditListingModal = ({ visible, onClose, listing, onListingUpdated }) => {
             </View>
 
             <View style={addListingModalStyles.buttonContainer}>
-              <TouchableOpacity
-                style={addListingModalStyles.cancelButton}
+              <Button
+                mode="outlined"
                 onPress={handleClose}
+                style={{ borderRadius: 8, flex: 1, marginRight: 8 }}
+                contentStyle={{ paddingVertical: 8 }}
+                textColor="#666"
               >
-                <Text style={addListingModalStyles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  addListingModalStyles.submitButton,
-                  isLoading && addListingModalStyles.submitButtonDisabled
-                ]}
+                Cancel
+              </Button>
+              <Button
+                mode="contained"
                 onPress={handleSubmit}
+                loading={isLoading}
                 disabled={isLoading}
+                style={{ borderRadius: 8, flex: 1, marginLeft: 8 }}
+                contentStyle={{ paddingVertical: 8 }}
+                buttonColor="#3498db"
               >
-                <Text style={[
-                  addListingModalStyles.submitButtonText,
-                  isLoading && addListingModalStyles.submitButtonTextDisabled
-                ]}>
-                  {isLoading ? 'Updating...' : 'Update Listing'}
-                </Text>
-              </TouchableOpacity>
+                Update Listing
+              </Button>
             </View>
           </ScrollView>
         </View>

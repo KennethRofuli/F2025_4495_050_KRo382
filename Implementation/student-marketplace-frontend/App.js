@@ -2,6 +2,8 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
+import { paperTheme } from './src/styles/CommonStyles';
 
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
@@ -18,10 +20,21 @@ import MarketIntelligenceScreen from './src/screens/MarketIntelligenceScreen';
 
 const Stack = createStackNavigator();
 
+// Custom theme to match our app's color scheme
+const theme = {
+  ...MD3LightTheme,
+  colors: {
+    ...MD3LightTheme.colors,
+    ...paperTheme.colors,
+  },
+  roundness: paperTheme.roundness,
+};
+
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <NavigationContainer>
+    <PaperProvider theme={theme}>
+      <SafeAreaProvider>
+        <NavigationContainer>
         <Stack.Navigator
           initialRouteName="Login"
           screenOptions={{
@@ -134,6 +147,7 @@ export default function App() {
           />
         </Stack.Navigator>
       </NavigationContainer>
-    </SafeAreaProvider>
+      </SafeAreaProvider>
+    </PaperProvider>
   );
 }

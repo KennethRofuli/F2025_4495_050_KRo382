@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   Alert,
   KeyboardAvoidingView,
@@ -10,6 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { TextInput as PaperTextInput, Menu, Divider, Button } from 'react-native-paper';
 import { authAPI } from '../services/api';
 import { authStyles } from '../styles/AuthStyles';
 
@@ -20,6 +20,11 @@ const RegisterScreen = ({ navigation }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [campus, setCampus] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+  const [campusMenuVisible, setCampusMenuVisible] = useState(false);
+
+  const campusList = ['Anvil', 'New Westminster', 'Coquitlam'];
 
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword || !campus) {
@@ -78,85 +83,114 @@ const RegisterScreen = ({ navigation }) => {
 
             {/* Form */}
             <View style={authStyles.formContainer}>
-              <View style={authStyles.inputContainer}>
-                <Text style={authStyles.label}>Full Name</Text>
-                <TextInput
-                  style={authStyles.input}
-                  placeholder="Enter your full name"
-                  value={name}
-                  onChangeText={setName}
-                  autoCapitalize="words"
-                />
-              </View>
+              <PaperTextInput
+                label="Full Name"
+                value={name}
+                onChangeText={setName}
+                autoCapitalize="words"
+                mode="outlined"
+                style={{ marginBottom: 16, backgroundColor: '#fff' }}
+                outlineColor="#ddd"
+                activeOutlineColor="#3498db"
+                left={<PaperTextInput.Icon icon="account" />}
+              />
 
-              <View style={authStyles.inputContainer}>
-                <Text style={authStyles.label}>Email</Text>
-                <TextInput
-                  style={authStyles.input}
-                  placeholder="Enter your email"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCompleteType="email"
-                />
-              </View>
+              <PaperTextInput
+                label="Email"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                mode="outlined"
+                style={{ marginBottom: 16, backgroundColor: '#fff' }}
+                outlineColor="#ddd"
+                activeOutlineColor="#3498db"
+                left={<PaperTextInput.Icon icon="email" />}
+              />
 
-              <View style={authStyles.inputContainer}>
-                <Text style={authStyles.label}>Campus</Text>
-                <TextInput
-                  style={authStyles.input}
-                  placeholder="Enter your campus name"
-                  value={campus}
-                  onChangeText={setCampus}
-                  autoCapitalize="words"
-                />
-              </View>
+              <Menu
+                visible={campusMenuVisible}
+                onDismiss={() => setCampusMenuVisible(false)}
+                anchor={
+                  <PaperTextInput
+                    label="Campus"
+                    value={campus}
+                    mode="outlined"
+                    style={{ marginBottom: 16, backgroundColor: '#fff' }}
+                    outlineColor="#ddd"
+                    activeOutlineColor="#3498db"
+                    left={<PaperTextInput.Icon icon="school" />}
+                    right={<PaperTextInput.Icon icon="menu-down" />}
+                    editable={false}
+                    onPressIn={() => setCampusMenuVisible(true)}
+                  />
+                }
+              >
+                {campusList.map((campusOption, index) => (
+                  <React.Fragment key={campusOption}>
+                    <Menu.Item
+                      onPress={() => {
+                        setCampus(campusOption);
+                        setCampusMenuVisible(false);
+                      }}
+                      title={campusOption}
+                    />
+                    {index < campusList.length - 1 && <Divider />}
+                  </React.Fragment>
+                ))}
+              </Menu>
 
-              <View style={authStyles.inputContainer}>
-                <Text style={authStyles.label}>Password</Text>
-                <TextInput
-                  style={authStyles.input}
-                  placeholder="Enter your password (min 6 characters)"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  autoCompleteType="off"
-                  textContentType="none"
-                  passwordRules=""
-                />
-              </View>
+              <PaperTextInput
+                label="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!passwordVisible}
+                autoComplete="password-new"
+                mode="outlined"
+                style={{ marginBottom: 16, backgroundColor: '#fff' }}
+                outlineColor="#ddd"
+                activeOutlineColor="#3498db"
+                left={<PaperTextInput.Icon icon="lock" />}
+                right={
+                  <PaperTextInput.Icon 
+                    icon={passwordVisible ? "eye-off" : "eye"} 
+                    onPress={() => setPasswordVisible(!passwordVisible)}
+                  />
+                }
+              />
 
-              <View style={authStyles.inputContainer}>
-                <Text style={authStyles.label}>Confirm Password</Text>
-                <TextInput
-                  style={authStyles.input}
-                  placeholder="Confirm your password"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry
-                  autoCompleteType="off"
-                  textContentType="none"
-                  passwordRules=""
-                />
-              </View>
+              <PaperTextInput
+                label="Confirm Password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!confirmPasswordVisible}
+                autoComplete="password-new"
+                mode="outlined"
+                style={{ marginBottom: 16, backgroundColor: '#fff' }}
+                outlineColor="#ddd"
+                activeOutlineColor="#3498db"
+                left={<PaperTextInput.Icon icon="lock-check" />}
+                right={
+                  <PaperTextInput.Icon 
+                    icon={confirmPasswordVisible ? "eye-off" : "eye"} 
+                    onPress={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+                  />
+                }
+              />
 
               <View style={authStyles.buttonContainer}>
-                <TouchableOpacity
-                  style={[
-                    authStyles.primaryButton, 
-                    isLoading && authStyles.primaryButtonDisabled
-                  ]}
+                <Button
+                  mode="contained"
                   onPress={handleRegister}
+                  loading={isLoading}
                   disabled={isLoading}
+                  style={{ borderRadius: 8, paddingVertical: 6 }}
+                  contentStyle={{ paddingVertical: 8 }}
+                  buttonColor="#3498db"
                 >
-                  <Text style={[
-                    authStyles.primaryButtonText,
-                    isLoading && authStyles.primaryButtonTextDisabled
-                  ]}>
-                    {isLoading ? 'Creating Account...' : 'Create Account'}
-                  </Text>
-                </TouchableOpacity>
+                  Create Account
+                </Button>
               </View>
             </View>
 

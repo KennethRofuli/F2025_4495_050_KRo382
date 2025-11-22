@@ -8,8 +8,8 @@ import {
   Alert,
   Image,
   Modal,
-  TextInput,
 } from 'react-native';
+import { Searchbar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { listingsAPI, authAPI, tokenManager } from '../services/api';
 import { imageUtils } from '../utils/helpers';
@@ -288,19 +288,20 @@ const DashboardScreen = ({ navigation }) => {
           <Text style={{ fontSize: 24, color: '#fff', fontWeight: 'bold' }}>☰</Text>
         </TouchableOpacity>
         <Text style={dashboardStyles.headerTitle}>Marketplace</Text>
-        <TouchableOpacity onPress={handleLogout} style={{ paddingHorizontal: 15, paddingVertical: 8, backgroundColor: 'rgba(255, 255, 255, 0.2)', borderRadius: 20 }}>
+        <TouchableOpacity onPress={handleLogout} style={{ paddingHorizontal: 15, paddingVertical: 8, backgroundColor: '#dc3545', borderRadius: 20 }}>
           <Text style={{ color: '#fff', fontWeight: '600' }}>Logout</Text>
         </TouchableOpacity>
       </View>
 
       {/* Search Bar */}
       <View style={dashboardStyles.searchContainer}>
-        <TextInput
-          style={dashboardStyles.searchInput}
+        <Searchbar
           placeholder="Search by title or category..."
           value={searchQuery}
           onChangeText={handleSearch}
-          clearButtonMode="while-editing"
+          style={{ backgroundColor: '#fff' }}
+          inputStyle={{ minHeight: 0 }}
+          elevation={1}
         />
       </View>
 

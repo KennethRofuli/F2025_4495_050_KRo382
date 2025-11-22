@@ -1,11 +1,11 @@
 # Student Marketplace
 # Kenneth Rofuli - 300392382
 
-A comprehensive React Native mobile application for students to buy, sell, and trade items within their campus community with AI-powered pricing intelligence and real-time messaging.
+A comprehensive React Native mobile application for students to buy, sell, and trade items within their campus community with intelligent pricing algorithms and real-time messaging.
 
 ## 📱 Project Overview
 
-This is a full-stack mobile marketplace application designed specifically for college students. Students can create listings for textbooks, electronics, furniture, and other items, browse available items with AI price suggestions, manage favorites, rate transactions, and communicate with sellers through real-time messaging - all within an intuitive, professional interface.
+This is a full-stack mobile marketplace application designed specifically for college students. Students can create listings for textbooks, electronics, furniture, and other items, browse available items with intelligent price suggestions, manage favorites, rate transactions, and communicate with sellers through real-time messaging - all within an intuitive, professional interface.
 
 ## 🚀 Tech Stack
 
@@ -47,13 +47,13 @@ This is a full-stack mobile marketplace application designed specifically for co
 - **Category-based Organization** with dynamic category system
 - **Price Validation** and formatting
 
-### 🤖 AI-Powered Pricing Intelligence
-- **Smart Price Suggestions** using machine learning algorithms
-- **Market Analysis** with category-based pricing trends
-- **Deal Score Calculation** to identify great deals
-- **Market Intelligence Dashboard** with comprehensive statistics
-- **Price Optimization Recommendations** based on market data
-- **Category-specific Pricing Models** (textbooks, electronics, furniture)
+### 🤖 Intelligent Pricing Algorithms
+- **Smart Price Suggestions** using statistical analysis and algorithmic calculations
+- **Market Analysis** with category-based pricing trends and data aggregation
+- **Deal Score Calculation** using mathematical formulas to identify great deals
+- **Market Intelligence Dashboard** with comprehensive statistics and trend analysis
+- **Price Optimization Recommendations** based on statistical market data analysis
+- **Category-specific Pricing Models** using rule-based algorithms (textbooks, electronics, furniture)
 
 ### ❤️ Advanced Favorites System
 - **Heart Icon Component** with real-time favorite toggling
@@ -151,11 +151,11 @@ This is a full-stack mobile marketplace application designed specifically for co
 
 ### ✅ Fully Implemented & Production-Ready
 - ✅ Complete user authentication system
-- ✅ Advanced listing management with AI pricing
+- ✅ Advanced listing management with intelligent pricing algorithms
 - ✅ Enhanced real-time messaging with reliability improvements
 - ✅ Comprehensive favorites system
 - ✅ User rating and review system
-- ✅ AI-powered market intelligence
+- ✅ Statistical market intelligence and algorithmic analysis
 - ✅ Enhanced admin panel with comprehensive content moderation
 - ✅ Cloud image storage and optimization
 - ✅ Professional UI/UX with unified design system
@@ -198,7 +198,7 @@ This comprehensive project demonstrates mastery of:
 - **API Development** with RESTful architecture and request caching
 - **Real-time Systems** with HTTP polling and reliability mechanisms
 - **Cloud Integration** with multiple service providers
-- **AI Integration** for smart pricing algorithms
+- **Algorithmic Intelligence** for smart pricing and market analysis
 - **Performance Optimization** with React hooks, memoization, and caching strategies
 - **Cross-Platform Development** with platform-specific optimizations
 - **Memory Management** and efficient resource utilization

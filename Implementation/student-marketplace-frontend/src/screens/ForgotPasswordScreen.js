@@ -9,10 +9,11 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
 } from 'react-native';
+import { Button } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { passwordResetAPI } from '../services/api';
+import { colors, spacing, typography, borderRadius, commonStyles } from '../styles/CommonStyles';
 
 const ForgotPasswordScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -112,20 +113,17 @@ const ForgotPasswordScreen = ({ navigation }) => {
           </View>
 
           {/* Send Reset Email Button */}
-          <TouchableOpacity
-            style={[styles.sendButton, loading && styles.sendButtonDisabled]}
+          <Button
+            mode="contained"
             onPress={handleSendResetEmail}
+            loading={loading}
             disabled={loading}
+            style={{ borderRadius: 8, marginBottom: 30 }}
+            contentStyle={{ paddingVertical: 8 }}
+            buttonColor="#3498db"
           >
-            {loading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator color="#ffffff" size="small" />
-                <Text style={styles.sendButtonText}>Sending...</Text>
-              </View>
-            ) : (
-              <Text style={styles.sendButtonText}>Send Reset Email</Text>
-            )}
-          </TouchableOpacity>
+            Send Reset Email
+          </Button>
 
           {/* Back to Login */}
           <TouchableOpacity
@@ -145,116 +143,70 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
+    ...commonStyles.container,
   },
   keyboardView: {
     flex: 1,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    ...commonStyles.screenHeader,
   },
   backButton: {
-    padding: 5,
+    ...commonStyles.backButton,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    ...commonStyles.screenHeaderTitle,
   },
   placeholder: {
-    width: 34, // Same width as back button for centering
+    width: 34,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 30,
-    paddingTop: 40,
-    paddingBottom: 30,
+    paddingHorizontal: spacing.xxxl,
+    paddingTop: spacing.huge + spacing.xs,
+    paddingBottom: spacing.xxxl,
   },
   iconContainer: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: spacing.xxxl,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#333',
+    fontSize: typography.xxl,
+    fontWeight: typography.bold,
+    color: colors.textPrimary,
     textAlign: 'center',
-    marginBottom: 15,
+    marginBottom: spacing.md,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: typography.md,
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
-    marginBottom: 40,
+    marginBottom: spacing.huge,
   },
   inputContainer: {
-    marginBottom: 30,
+    marginBottom: spacing.xxxl,
   },
   inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    fontSize: typography.sm,
+    fontWeight: typography.semiBold,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    backgroundColor: 'white',
-    color: '#333',
-  },
-  sendButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginBottom: 30,
-    shadowColor: '#007AFF',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  sendButtonDisabled: {
-    backgroundColor: '#cccccc',
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  sendButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
+    ...commonStyles.input,
+    borderRadius: borderRadius.xl,
   },
   backToLoginButton: {
     alignItems: 'center',
   },
   backToLoginText: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: typography.sm,
+    color: colors.textSecondary,
   },
   loginLink: {
-    color: '#007AFF',
-    fontWeight: '600',
+    color: colors.primary,
+    fontWeight: typography.semiBold,
   },
 });
 
