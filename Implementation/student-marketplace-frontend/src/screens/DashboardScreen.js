@@ -33,6 +33,7 @@ const DashboardScreen = ({ navigation }) => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [currentUserId, setCurrentUserId] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
 
@@ -172,7 +173,8 @@ const DashboardScreen = ({ navigation }) => {
   );
   
   const handleSearch = useCallback((query) => {
-    debouncedSearch(query);
+    setSearchInput(query); // Update input immediately for UI
+    debouncedSearch(query); // Debounce the actual filtering
   }, [debouncedSearch]);
 
   // Memoize filtered listings to prevent unnecessary recalculations
@@ -297,7 +299,7 @@ const DashboardScreen = ({ navigation }) => {
       <View style={dashboardStyles.searchContainer}>
         <Searchbar
           placeholder="Search by title or category..."
-          value={searchQuery}
+          value={searchInput}
           onChangeText={handleSearch}
           style={{ backgroundColor: '#fff' }}
           inputStyle={{ minHeight: 0 }}

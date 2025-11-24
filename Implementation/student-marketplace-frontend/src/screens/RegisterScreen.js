@@ -9,7 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { TextInput as PaperTextInput, Menu, Divider, Button } from 'react-native-paper';
+import { TextInput as PaperTextInput, Button } from 'react-native-paper';
 import { authAPI } from '../services/api';
 import { authStyles } from '../styles/AuthStyles';
 
@@ -22,9 +22,6 @@ const RegisterScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
-  const [campusMenuVisible, setCampusMenuVisible] = useState(false);
-
-  const campusList = ['Anvil', 'New Westminster', 'Coquitlam'];
 
   const handleRegister = async () => {
     if (!name || !email || !password || !confirmPassword || !campus) {
@@ -109,37 +106,17 @@ const RegisterScreen = ({ navigation }) => {
                 left={<PaperTextInput.Icon icon="email" />}
               />
 
-              <Menu
-                visible={campusMenuVisible}
-                onDismiss={() => setCampusMenuVisible(false)}
-                anchor={
-                  <PaperTextInput
-                    label="Campus"
-                    value={campus}
-                    mode="outlined"
-                    style={{ marginBottom: 16, backgroundColor: '#fff' }}
-                    outlineColor="#ddd"
-                    activeOutlineColor="#3498db"
-                    left={<PaperTextInput.Icon icon="school" />}
-                    right={<PaperTextInput.Icon icon="menu-down" />}
-                    editable={false}
-                    onPressIn={() => setCampusMenuVisible(true)}
-                  />
-                }
-              >
-                {campusList.map((campusOption, index) => (
-                  <React.Fragment key={campusOption}>
-                    <Menu.Item
-                      onPress={() => {
-                        setCampus(campusOption);
-                        setCampusMenuVisible(false);
-                      }}
-                      title={campusOption}
-                    />
-                    {index < campusList.length - 1 && <Divider />}
-                  </React.Fragment>
-                ))}
-              </Menu>
+              <PaperTextInput
+                label="Campus"
+                value={campus}
+                onChangeText={setCampus}
+                mode="outlined"
+                style={{ marginBottom: 16, backgroundColor: '#fff' }}
+                outlineColor="#ddd"
+                activeOutlineColor="#3498db"
+                left={<PaperTextInput.Icon icon="school" />}
+                placeholder="Enter your campus"
+              />
 
               <PaperTextInput
                 label="Password"
